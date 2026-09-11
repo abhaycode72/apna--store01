@@ -1,5 +1,5 @@
  'use client';
-import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '../../useCartStore';
 
@@ -31,6 +31,10 @@ export default function Header() {
           </button>
           <button onClick={() => router.push('/support')} aria-label="Customer support" title="Customer support" className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700">
             <Headphones size={19} />
+          </button>
+          <button onClick={() => router.push('/checkout')} aria-label="Login to order" title="Login to order" className="hidden items-center gap-2 rounded-lg border border-purple-200 px-3 py-2 text-sm font-bold text-purple-700 transition hover:bg-purple-50 sm:flex">
+            <UserRound size={18} />
+            <span>Login to order</span>
           </button>
           <button onClick={() => router.push('/admin')} aria-label="Admin dashboard" title="Admin dashboard" className="hidden rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 md:block">
             <ShieldCheck size={19} />
