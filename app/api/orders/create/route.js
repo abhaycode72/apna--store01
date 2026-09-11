@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { addOrder } from '../../../../src/store/orders';
 
 export async function POST(request) {
   const { customer, items, paymentMethod, total } = await request.json();
@@ -16,10 +17,13 @@ export async function POST(request) {
     customer,
     items,
     paymentMethod,
+    paymentStatus: paymentMethod === 'cod' ? 'PENDING_COLLECTION' : 'PAID',
     total: Number(total),
     status: 'ORDER_PLACED',
     createdAt: new Date().toISOString(),
   };
+
+  addOrder(order);
 
   return NextResponse.json({ success: true, order }, { status: 201 });
 }
