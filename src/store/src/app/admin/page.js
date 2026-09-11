@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   Bike,
@@ -68,7 +68,43 @@ function Alerts() {
   return <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><AlertTriangle className="text-amber-400" size={18} />Dark Store Alerts</h2><div className="space-y-3 text-xs"><div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3"><b className="text-amber-400">Stock Out Risk</b><p className="mt-1 text-slate-300">Fresh Milk down to 3 units in Patna Central.</p></div><div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3"><b className="text-red-400">Rider Bottleneck</b><p className="mt-1 text-slate-300">Kankerbagh DS has 8 pending orders.</p></div><div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3"><b className="text-blue-400">COD Cap Triggered</b><p className="mt-1 text-slate-300">Orders above ₹1,000 route to online payment.</p></div></div></section>;
 }
 
+function AdminLogin({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submitLogin(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    if (response.ok) onLogin();
+    else setError('Invalid username or password.');
+    setSubmitting(false);
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-900 px-4 text-slate-100">
+      <form onSubmit={submitLogin} className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-950 p-8 shadow-xl">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">apna store01</p>
+        <h1 className="mt-2 text-2xl font-black">Admin login</h1>
+        <p className="mt-2 text-sm text-slate-400">Sign in to access the control center.</p>
+        <label className="mt-6 block text-sm font-semibold">Username<input value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-white outline-none focus:border-purple-500" autoComplete="username" required /></label>
+        <label className="mt-4 block text-sm font-semibold">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-white outline-none focus:border-purple-500" autoComplete="current-password" required /></label>
+        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        <button type="submit" disabled={submitting} className="mt-6 w-full rounded-lg bg-purple-600 px-4 py-3 font-bold text-white transition hover:bg-purple-500 disabled:cursor-wait disabled:opacity-60">{submitting ? 'Signing in...' : 'Sign in'}</button>
+      </form>
+    </main>
+  );
+}
+
 export default function AdminDashboard() {
+  const [authenticated, setAuthenticated] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [darkStoreActive, setDarkStoreActive] = useState(true);
   const [codLimit, setCodLimit] = useState('1000');
@@ -77,6 +113,18 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState('');
   const activeLabel = sections.find((section) => section.id === activeSection)?.label;
   const saveSettings = () => { setSaved(true); window.setTimeout(() => setSaved(false), 3000); };
+
+  useEffect(() => {
+    fetch('/api/admin/session').then((response) => setAuthenticated(response.ok)).catch(() => setAuthenticated(false));
+  }, []);
+
+  async function logout() {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    setAuthenticated(false);
+  }
+
+  if (authenticated === null) return <div className="min-h-screen bg-slate-900" />;
+  if (!authenticated) return <AdminLogin onLogin={() => setAuthenticated(true)} />;
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
@@ -88,7 +136,7 @@ export default function AdminDashboard() {
       </aside>
 
       <main className="flex-1 space-y-6 overflow-y-auto p-6 lg:p-8">
-        <header className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center"><div><p className="text-xs font-semibold uppercase tracking-wider text-purple-400">Admin / {activeLabel}</p><h1 className="mt-1 text-xl font-bold">Quick Commerce Control Center</h1><p className="text-xs text-slate-400">Monitoring Patna Dark Store Region</p></div><div className="flex items-center gap-3"><span className="text-xs font-semibold text-slate-300">Store status:</span><button type="button" onClick={() => setDarkStoreActive(!darkStoreActive)} className={`rounded-lg px-4 py-2 text-xs font-bold transition ${darkStoreActive ? 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-400' : 'border border-red-500/30 bg-red-500/20 text-red-400'}`}>{darkStoreActive ? 'ONLINE / ACCEPTING ORDERS' : 'PAUSED'}</button></div></header>
+        <header className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center"><div><p className="text-xs font-semibold uppercase tracking-wider text-purple-400">Admin / {activeLabel}</p><h1 className="mt-1 text-xl font-bold">Quick Commerce Control Center</h1><p className="text-xs text-slate-400">Monitoring Patna Dark Store Region</p></div><div className="flex items-center gap-3"><span className="text-xs font-semibold text-slate-300">Store status:</span><button type="button" onClick={() => setDarkStoreActive(!darkStoreActive)} className={`rounded-lg px-4 py-2 text-xs font-bold transition ${darkStoreActive ? 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-400' : 'border border-red-500/30 bg-red-500/20 text-red-400'}`}>{darkStoreActive ? 'ONLINE / ACCEPTING ORDERS' : 'PAUSED'}</button><button type="button" onClick={logout} className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 transition hover:border-red-400 hover:text-red-300">Log out</button></div></header>
         <div className="flex gap-2 overflow-x-auto md:hidden">{sections.map(({ id, label }) => <button type="button" key={id} onClick={() => setActiveSection(id)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-bold ${activeSection === id ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300'}`}>{label}</button>)}</div>
 
         {activeSection === 'dashboard' && <><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">{stats.map(({ label, value, icon: Icon, change }) => <div key={label} className="rounded-2xl border border-slate-800 bg-slate-950 p-5"><div className="mb-2 flex items-center justify-between text-slate-400"><span className="text-xs font-semibold">{label}</span><Icon size={20} className="text-purple-400" /></div><div className="text-2xl font-black text-white">{value}</div><span className="mt-1 inline-block text-[11px] font-bold text-emerald-400">{change}</span></div>)}</div><div className="grid grid-cols-1 gap-6 lg:grid-cols-3"><section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-6 lg:col-span-2"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">Live Orders Stream</h2><button type="button" onClick={() => setActiveSection('orders')} className="text-xs font-bold text-purple-400 hover:text-white">View all</button></div><OrdersTable /></section><Alerts /></div></>}
