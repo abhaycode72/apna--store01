@@ -39,13 +39,27 @@ const paymentOptions = [
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [selectedBank, setSelectedBank] = useState('State Bank of India');
+  const [customerDetails, setCustomerDetails] = useState({
+    name: '',
+    mobile: '',
+    email: '',
+    address: '',
+    location: '',
+  });
   const [orderPlaced, setOrderPlaced] = useState(false);
   const items = useCartStore((state) => state.items);
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const deliveryFee = 15;
   const grandTotal = subtotal + deliveryFee;
 
+  const updateCustomerDetails = (field, value) => {
+    setCustomerDetails((current) => ({ ...current, [field]: value }));
+  };
+
+  const detailsComplete = Object.values(customerDetails).every(Boolean);
+
   const handlePlaceOrder = () => {
+    if (!detailsComplete) return;
     setOrderPlaced(true);
   };
 
@@ -61,6 +75,35 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <section className="space-y-3 md:col-span-2">
+            <section className="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
+              <div className="mb-4">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-600">Login before ordering</p>
+                <h2 className="mt-1 text-xl font-black text-gray-950">Where should we deliver?</h2>
+                <p className="mt-1 text-sm text-gray-500">Enter your contact and delivery details to continue.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-semibold text-gray-800">
+                  Full name
+                  <input required value={customerDetails.name} onChange={(event) => updateCustomerDetails('name', event.target.value)} placeholder="Your name" className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                </label>
+                <label className="text-sm font-semibold text-gray-800">
+                  Mobile number
+                  <input required type="tel" inputMode="numeric" pattern="[0-9]{10}" value={customerDetails.mobile} onChange={(event) => updateCustomerDetails('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                </label>
+                <label className="text-sm font-semibold text-gray-800 sm:col-span-2">
+                  Email address
+                  <input required type="email" value={customerDetails.email} onChange={(event) => updateCustomerDetails('email', event.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                </label>
+                <label className="text-sm font-semibold text-gray-800 sm:col-span-2">
+                  Complete delivery address
+                  <textarea required rows={3} value={customerDetails.address} onChange={(event) => updateCustomerDetails('address', event.target.value)} placeholder="House no., street, landmark" className="mt-2 w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                </label>
+                <label className="text-sm font-semibold text-gray-800 sm:col-span-2">
+                  Location / area
+                  <input required value={customerDetails.location} onChange={(event) => updateCustomerDetails('location', event.target.value)} placeholder="e.g. Kankarbagh, Patna" className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                </label>
+              </div>
+            </section>
             {paymentOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = paymentMethod === option.id;
@@ -120,13 +163,14 @@ export default function CheckoutPage() {
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-black text-gray-950"><span>To pay</span><span>₹{grandTotal}</span></div>
             </div>
             {orderPlaced ? (
-              <div className="rounded-xl bg-emerald-50 p-4 text-center text-sm font-bold text-emerald-800">Order confirmed. {paymentMethod === 'bank' ? `Payment via ${selectedBank}` : 'Payment details received'}.</div>
+              <div className="rounded-xl bg-emerald-50 p-4 text-center text-sm font-bold text-emerald-800">Order confirmed for {customerDetails.name}. Delivery to {customerDetails.location}.</div>
             ) : (
-              <button onClick={handlePlaceOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700">
+              <button onClick={handlePlaceOrder} disabled={!detailsComplete} className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none">
                 <span>{paymentMethod === 'cod' ? 'Confirm COD Order' : 'Pay & Place Order'}</span>
                 <ArrowRight size={18} />
               </button>
             )}
+            {!detailsComplete && !orderPlaced && <p className="mt-3 text-center text-xs font-semibold text-amber-700">Complete your login and delivery details first.</p>}
           </aside>
         </div>
       </main>
