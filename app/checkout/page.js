@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Banknote, Building2, Check, CreditCard, ShieldCheck, Wallet } from 'lucide-react';
 import Header from '../../src/store/src/components/Header';
 import { useCartStore } from '../../src/store/useCartStore';
@@ -39,6 +39,8 @@ const paymentOptions = [
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [selectedBank, setSelectedBank] = useState('State Bank of India');
+  const [codLimit, setCodLimit] = useState(1000);
+  const [fraudScreening, setFraudScreening] = useState(true);
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     mobile: '',
@@ -51,6 +53,19 @@ export default function CheckoutPage() {
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const deliveryFee = 15;
   const grandTotal = subtotal + deliveryFee;
+  const codUnavailable = paymentMethod === 'cod' && grandTotal > codLimit;
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('apna-admin-settings');
+    if (!savedSettings) return;
+    try {
+      const settings = JSON.parse(savedSettings);
+      if (settings.codLimit) setCodLimit(Number(settings.codLimit));
+      if (typeof settings.fraudCheck === 'boolean') setFraudScreening(settings.fraudCheck);
+    } catch {
+      localStorage.removeItem('apna-admin-settings');
+    }
+  }, []);
 
   const updateCustomerDetails = (field, value) => {
     setCustomerDetails((current) => ({ ...current, [field]: value }));
@@ -112,8 +127,9 @@ export default function CheckoutPage() {
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => setPaymentMethod(option.id)}
-                  className={`flex w-full items-center justify-between rounded-2xl border-2 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                  onClick={() => option.id !== 'cod' || !codUnavailable ? setPaymentMethod(option.id) : null}
+                  disabled={option.id === 'cod' && codUnavailable}
+                  className={`flex w-full items-center justify-between rounded-2xl border-2 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 ${
                     isSelected ? 'border-purple-600 ring-4 ring-purple-100' : 'border-white'
                   }`}
                 >
@@ -132,6 +148,7 @@ export default function CheckoutPage() {
                 </button>
               );
             })}
+            {codUnavailable && <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">COD is unavailable for orders above ₹{codLimit}. Choose an online payment method.</p>}
             {paymentMethod === 'bank' && (
               <label className="block rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5">
                 <span className="mb-2 block text-sm font-bold text-gray-800">Choose your bank</span>
@@ -171,6 +188,7 @@ export default function CheckoutPage() {
               </button>
             )}
             {!detailsComplete && !orderPlaced && <p className="mt-3 text-center text-xs font-semibold text-amber-700">Complete your login and delivery details first.</p>}
+            {fraudScreening && !orderPlaced && <p className="mt-3 text-center text-[11px] font-semibold text-gray-500">Fraud screening is enabled for this order.</p>}
           </aside>
         </div>
       </main>
