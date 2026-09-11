@@ -49,6 +49,9 @@ export default function CheckoutPage() {
     location: '',
   });
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderId, setOrderId] = useState('');
+  const [orderError, setOrderError] = useState('');
+  const [placingOrder, setPlacingOrder] = useState(false);
   const items = useCartStore((state) => state.items);
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const deliveryFee = 15;
@@ -73,9 +76,27 @@ export default function CheckoutPage() {
 
   const detailsComplete = Object.values(customerDetails).every(Boolean);
 
-  const handlePlaceOrder = () => {
-    if (!detailsComplete) return;
-    setOrderPlaced(true);
+  const handlePlaceOrder = async () => {
+    if (!detailsComplete || codUnavailable || !items.length || placingOrder) return;
+    setPlacingOrder(true);
+    setOrderError('');
+    const response = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: customerDetails,
+        items,
+        paymentMethod,
+        total: grandTotal,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) setOrderError(result.error || 'Unable to place your order.');
+    else {
+      setOrderId(result.order.id);
+      setOrderPlaced(true);
+    }
+    setPlacingOrder(false);
   };
 
   return (
@@ -180,13 +201,15 @@ export default function CheckoutPage() {
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-black text-gray-950"><span>To pay</span><span>₹{grandTotal}</span></div>
             </div>
             {orderPlaced ? (
-              <div className="rounded-xl bg-emerald-50 p-4 text-center text-sm font-bold text-emerald-800">Order confirmed for {customerDetails.name}. Delivery to {customerDetails.location}.</div>
+              <div className="rounded-xl bg-emerald-50 p-4 text-center text-sm font-bold text-emerald-800">Order {orderId} confirmed for {customerDetails.name}. Delivery to {customerDetails.location}.</div>
             ) : (
-              <button onClick={handlePlaceOrder} disabled={!detailsComplete} className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none">
-                <span>{paymentMethod === 'cod' ? 'Confirm COD Order' : 'Pay & Place Order'}</span>
+              <button onClick={handlePlaceOrder} disabled={!detailsComplete || codUnavailable || !items.length || placingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none">
+                <span>{placingOrder ? 'Placing order...' : paymentMethod === 'cod' ? 'Confirm COD Order' : 'Pay & Place Order'}</span>
                 <ArrowRight size={18} />
               </button>
             )}
+            {!items.length && !orderPlaced && <p className="mt-3 text-center text-xs font-semibold text-amber-700">Add products to your cart before ordering.</p>}
+            {orderError && <p className="mt-3 text-center text-xs font-semibold text-red-700">{orderError}</p>}
             {!detailsComplete && !orderPlaced && <p className="mt-3 text-center text-xs font-semibold text-amber-700">Complete your login and delivery details first.</p>}
             {fraudScreening && !orderPlaced && <p className="mt-3 text-center text-[11px] font-semibold text-gray-500">Fraud screening is enabled for this order.</p>}
           </aside>
