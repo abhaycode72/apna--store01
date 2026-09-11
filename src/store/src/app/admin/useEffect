@@ -1,0 +1,29 @@
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:5000');
+
+export default function AdminDashboard() {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    // Initial orders fetch from socket
+    socket.on('initial_orders', (data) => {
+      setOrders(data);
+    });
+
+    // Sub-second update whenever a customer places an order
+    socket.on('new_order_received', (newOrder) => {
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+      // Optional: Audio Alert play kar sakte hain dark store staff ke liye
+      new Audio('/notification.mp3').play().catch(() => {});
+    });
+
+    return () => {
+      socket.off('initial_orders');
+      socket.off('new_order_received');
+    };
+  }, []);
+
+  // Baaki Dashboard ka UI Code Niche...
+}

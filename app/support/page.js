@@ -1,0 +1,111 @@
+'use client';
+
+import { useState } from 'react';
+import { ArrowRight, ChevronDown, Headphones, Mail, MessageCircle, Phone, Send, ShieldCheck } from 'lucide-react';
+import Header from '../../src/store/src/components/Header';
+
+const faqs = [
+  ['Where is my order?', 'Open your order details to see the rider location and latest delivery estimate.'],
+  ['Can I cancel my order?', 'You can cancel before packing starts. Once packing begins, the order cannot be cancelled.'],
+  ['What if an item is missing?', 'Tell us within 24 hours and our support team will arrange a refund or replacement.'],
+];
+
+export default function SupportPage() {
+  const [openFaq, setOpenFaq] = useState(0);
+  const [messageSent, setMessageSent] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setMessageSent(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-transparent">
+      <Header />
+      <main className="mx-auto max-w-5xl px-4 py-10">
+        <section className="mb-8 rounded-3xl bg-gray-950 p-8 text-white shadow-xl md:p-10">
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div>
+              <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-emerald-300">We are here for you</p>
+              <h1 className="max-w-xl text-3xl font-black md:text-4xl">How can we make your delivery better?</h1>
+              <p className="mt-3 max-w-lg text-gray-300">Our customer care team is available every day from 7 AM to 11 PM.</p>
+            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400 text-gray-950">
+              <Headphones size={30} />
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          <button type="button" onClick={() => setChatOpen(!chatOpen)} className="group rounded-2xl border border-white bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-700"><MessageCircle size={21} /></span>
+            <span className="block font-bold text-gray-950">Live chat</span>
+            <span className="mt-1 block text-sm text-gray-500">Usually replies in under 2 minutes</span>
+            <span className="mt-4 flex items-center gap-1 text-sm font-bold text-purple-700">{chatOpen ? 'Close chat' : 'Start chat'} <ArrowRight size={15} className="transition group-hover:translate-x-1" /></span>
+          </button>
+          <a href="tel:+911800123456" className="group rounded-2xl border border-white bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><Phone size={21} /></span>
+            <span className="block font-bold text-gray-950">Call us</span>
+            <span className="mt-1 block text-sm text-gray-500">1800 123 456, toll-free support</span>
+            <span className="mt-4 flex items-center gap-1 text-sm font-bold text-emerald-700">Call now <ArrowRight size={15} className="transition group-hover:translate-x-1" /></span>
+          </a>
+          <a href="mailto:care@apnastore.com" className="group rounded-2xl border border-white bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><Mail size={21} /></span>
+            <span className="block font-bold text-gray-950">Email support</span>
+            <span className="mt-1 block text-sm text-gray-500">care@apnastore.com</span>
+            <span className="mt-4 flex items-center gap-1 text-sm font-bold text-blue-700">Send email <ArrowRight size={15} className="transition group-hover:translate-x-1" /></span>
+          </a>
+        </div>
+
+        {chatOpen && (
+          <section className="mt-6 rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-black text-gray-950">Apna Store live chat</h2>
+                <p className="mt-1 text-sm text-gray-500">Hi! Tell us what went wrong and a support agent will join shortly.</p>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Agent online</span>
+            </div>
+            <form onSubmit={(event) => { event.preventDefault(); setChatOpen(false); setMessageSent(true); }} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <input required aria-label="Chat message" placeholder="Type your message..." className="min-w-0 flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+              <button type="submit" className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700"><Send size={17} /> Send</button>
+            </form>
+          </section>
+        )}
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <section className="rounded-2xl border border-white bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-black text-gray-950">Quick answers</h2>
+            <div className="divide-y divide-gray-100">
+              {faqs.map(([question, answer], index) => (
+                <div key={question} className="py-3">
+                  <button type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between text-left font-bold text-gray-800">
+                    {question}
+                    <ChevronDown size={18} className={`transition ${openFaq === index ? 'rotate-180 text-purple-600' : 'text-gray-400'}`} />
+                  </button>
+                  {openFaq === index && <p className="mt-2 pr-6 text-sm leading-6 text-gray-500">{answer}</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-white bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-xl font-black text-gray-950">Send us a message</h2>
+            <p className="mb-4 text-sm text-gray-500">We will get back to you as soon as possible.</p>
+            {messageSent ? (
+              <div className="rounded-xl bg-emerald-50 p-5 text-sm font-semibold text-emerald-800">Thanks. Your message is with our support team now.</div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input required aria-label="Your email" type="email" placeholder="Your email" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                <textarea required aria-label="How can we help" placeholder="How can we help?" rows={4} className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+                <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white transition hover:bg-purple-700"><Send size={17} /> Send message</button>
+              </form>
+            )}
+            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-400"><ShieldCheck size={15} className="text-emerald-600" /> Your details stay private.</div>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,1 @@
+export { default } from '../../src/store/src/app/terms/src/app/privacy/page';

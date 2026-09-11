@@ -1,0 +1,46 @@
+ 'use client';
+import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCartStore } from '../../useCartStore';
+
+export default function Header() {
+  const router = useRouter();
+  const items = useCartStore((state) => state.items);
+  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+
+  return (
+    <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <button onClick={() => router.push('/')} className="flex items-center space-x-2">
+          <h1 className="text-2xl font-black text-purple-700">apna store01</h1>
+        </button>
+        
+        {/* Hyperlocal Delivery Indicator */}
+        <div className="hidden md:flex flex-col items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Delivery in 10 Min</span>
+          <div className="flex items-center text-sm font-semibold">
+            <MapPin size={16} className="text-purple-600 mr-1" />
+            Home - 800001, Patna
+          </div>
+        </div>
+
+        {/* Cart Button */}
+        <div className="flex items-center gap-2">
+          <button onClick={() => router.push('/')} aria-label="Home" title="Home" className="hidden rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 sm:block">
+            <Home size={19} />
+          </button>
+          <button onClick={() => router.push('/support')} aria-label="Customer support" title="Customer support" className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700">
+            <Headphones size={19} />
+          </button>
+          <button onClick={() => router.push('/admin')} aria-label="Admin dashboard" title="Admin dashboard" className="hidden rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 md:block">
+            <ShieldCheck size={19} />
+          </button>
+          <button onClick={() => router.push('/checkout')} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-purple-700 transition">
+            <ShoppingBag size={20} />
+            <span>{cartCount} Items</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

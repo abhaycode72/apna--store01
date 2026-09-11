@@ -1,0 +1,10 @@
+// Add these points into your src/app/terms/page.js
+
+1. Payment Modes
+"The Platform supports Online Payments (UPI, Debit/Credit Cards, Wallets, Net Banking) and Cash on Delivery (COD). For Online Payments, the order is confirmed upon receipt of successful payment authorization from the gateway."
+
+2. Cash on Delivery (COD) Rules
+"For COD orders, payment must be handed over to the delivery partner immediately upon arrival, either in physical cash or by scanning the rider's dynamic UPI QR code. To maintain our 10-minute delivery commitment, riders are not equipped to carry large amounts of cash change. Customers are requested to provide exact cash."
+
+3. Rejection at Doorstep
+"Refusal to pay upon delivery for perishable items (e.g., fresh milk, vegetables) without a valid damaged product claim will result in temporary or permanent suspension of the COD payment option for your account."
