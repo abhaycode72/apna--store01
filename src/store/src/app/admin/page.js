@@ -36,6 +36,12 @@ const stats = [
   { label: 'Riders on Field', value: '32 Active', icon: Bike, change: '4 Idle' },
 ];
 
+const defaultStores = [
+  { name: 'Patna Central DS', description: 'Active orders and inventory monitored' },
+  { name: 'Kankerbagh DS', description: 'Active orders and inventory monitored' },
+  { name: 'Boring Road DS', description: 'Active orders and inventory monitored' },
+];
+
 function SaveButton({ saved, onSave }) {
   return (
     <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-800 pt-5">
@@ -111,11 +117,32 @@ export default function AdminDashboard() {
   const [fraudCheck, setFraudCheck] = useState(true);
   const [saved, setSaved] = useState(false);
   const [search, setSearch] = useState('');
+  const [stores, setStores] = useState(defaultStores);
+  const [riders, setRiders] = useState({ active: 32, available: 28, onBreak: 4 });
   const activeLabel = sections.find((section) => section.id === activeSection)?.label;
-  const saveSettings = () => { setSaved(true); window.setTimeout(() => setSaved(false), 3000); };
+  const saveSettings = () => {
+    localStorage.setItem('apna-admin-settings', JSON.stringify({ stores, riders, darkStoreActive, codLimit, fraudCheck }));
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 3000);
+  };
 
   useEffect(() => {
     fetch('/api/admin/session').then((response) => setAuthenticated(response.ok)).catch(() => setAuthenticated(false));
+  }, []);
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('apna-admin-settings');
+    if (!savedSettings) return;
+    try {
+      const settings = JSON.parse(savedSettings);
+      if (settings.stores) setStores(settings.stores);
+      if (settings.riders) setRiders(settings.riders);
+      if (typeof settings.darkStoreActive === 'boolean') setDarkStoreActive(settings.darkStoreActive);
+      if (settings.codLimit) setCodLimit(settings.codLimit);
+      if (typeof settings.fraudCheck === 'boolean') setFraudCheck(settings.fraudCheck);
+    } catch {
+      localStorage.removeItem('apna-admin-settings');
+    }
   }, []);
 
   async function logout() {
@@ -141,8 +168,8 @@ export default function AdminDashboard() {
 
         {activeSection === 'dashboard' && <><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">{stats.map(({ label, value, icon: Icon, change }) => <div key={label} className="rounded-2xl border border-slate-800 bg-slate-950 p-5"><div className="mb-2 flex items-center justify-between text-slate-400"><span className="text-xs font-semibold">{label}</span><Icon size={20} className="text-purple-400" /></div><div className="text-2xl font-black text-white">{value}</div><span className="mt-1 inline-block text-[11px] font-bold text-emerald-400">{change}</span></div>)}</div><div className="grid grid-cols-1 gap-6 lg:grid-cols-3"><section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-6 lg:col-span-2"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">Live Orders Stream</h2><button type="button" onClick={() => setActiveSection('orders')} className="text-xs font-bold text-purple-400 hover:text-white">View all</button></div><OrdersTable /></section><Alerts /></div></>}
         {activeSection === 'orders' && <Panel title="Orders" subtitle="Review and monitor every live order."><div className="mb-4 flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 sm:max-w-sm"><Search size={17} className="text-slate-500" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search order or customer" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500" /></div><OrdersTable search={search} /></Panel>}
-        {activeSection === 'stores' && <Panel title="Dark Stores" subtitle="Manage store availability and operating capacity."><div className="grid gap-4 md:grid-cols-2">{['Patna Central DS', 'Kankerbagh DS', 'Boring Road DS'].map((name) => <div key={name} className="rounded-xl border border-slate-800 bg-slate-900 p-4"><h3 className="font-bold">{name}</h3><p className="mt-1 text-xs text-slate-400">Active orders and inventory monitored</p><span className={`mt-4 inline-block rounded-full px-2 py-1 text-[10px] font-bold ${darkStoreActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{darkStoreActive ? 'ONLINE' : 'PAUSED'}</span></div>)}</div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
-        {activeSection === 'fleet' && <Panel title="Fleet / Riders" subtitle="Track rider availability and delivery capacity."><div className="grid gap-4 sm:grid-cols-3"><div className="rounded-xl border border-slate-800 bg-slate-900 p-4"><p className="text-xs text-slate-400">Active riders</p><p className="mt-2 text-2xl font-black">32</p></div><div className="rounded-xl border border-slate-800 bg-slate-900 p-4"><p className="text-xs text-slate-400">Available now</p><p className="mt-2 text-2xl font-black">28</p></div><div className="rounded-xl border border-slate-800 bg-slate-900 p-4"><p className="text-xs text-slate-400">On break</p><p className="mt-2 text-2xl font-black">4</p></div></div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
+        {activeSection === 'stores' && <Panel title="Dark Stores" subtitle="Edit store names, descriptions and availability."><div className="grid gap-4 md:grid-cols-2">{stores.map((store, index) => <div key={`${store.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900 p-4"><label className="block text-xs font-semibold text-slate-400">Store name<input value={store.name} onChange={(event) => setStores((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm font-bold text-white outline-none focus:border-purple-500" /></label><label className="mt-3 block text-xs font-semibold text-slate-400">Description<input value={store.description} onChange={(event) => setStores((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 outline-none focus:border-purple-500" /></label><span className={`mt-4 inline-block rounded-full px-2 py-1 text-[10px] font-bold ${darkStoreActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{darkStoreActive ? 'ONLINE' : 'PAUSED'}</span></div>)}</div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
+        {activeSection === 'fleet' && <Panel title="Fleet / Riders" subtitle="Edit rider availability and delivery capacity."><div className="grid gap-4 sm:grid-cols-3">{[['active', 'Active riders'], ['available', 'Available now'], ['onBreak', 'On break']].map(([key, label]) => <label key={key} className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-xs font-semibold text-slate-400">{label}<input type="number" min="0" value={riders[key]} onChange={(event) => setRiders((current) => ({ ...current, [key]: Number(event.target.value) }))} className="mt-2 w-full bg-transparent text-2xl font-black text-white outline-none" /></label>)}</div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
         {activeSection === 'fraud' && <Panel title="COD & Fraud Rules" subtitle="Control payment risk and cash collection limits."><label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-4"><span><span className="block font-bold">Enable fraud screening</span><span className="text-xs text-slate-400">Flag repeated cancellations and suspicious COD activity.</span></span><input type="checkbox" checked={fraudCheck} onChange={(event) => setFraudCheck(event.target.checked)} className="h-5 w-5 accent-purple-600" /></label><label className="mt-4 block max-w-sm"><span className="mb-2 block text-sm font-bold">Maximum COD order value</span><div className="flex items-center gap-2"><span className="text-slate-400">₹</span><input type="number" min="0" value={codLimit} onChange={(event) => setCodLimit(event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-purple-500" /></div></label><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
       </main>
     </div>
