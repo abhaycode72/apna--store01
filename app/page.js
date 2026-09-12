@@ -42,11 +42,11 @@ const products = [
   { id: 25, name: 'Bisleri Mineral Water', category: 'Beverages', weight: '1 L', price: 20, image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=640&q=85' },
 
   // Cigarettes & Tobacco
-  { id: 26, name: 'Classic Milds (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 350, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
-  { id: 27, name: 'Gold Flake Kings (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 180, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
-  { id: 28, name: 'Marlboro Advance (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 360, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
-  { id: 29, name: 'Classic Regular (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 175, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
-  { id: 30, name: 'Benson & Hedges (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 380, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+  { id: 26, name: 'Classic Milds (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 350, image: 'https://placehold.co/400x400/003366/FFFFFF?text=Classic%5CnMilds&font=montserrat' },
+  { id: 27, name: 'Gold Flake Kings (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 180, image: 'https://placehold.co/400x400/F4D03F/000000?text=Gold%5CnFlake&font=montserrat' },
+  { id: 28, name: 'Marlboro Advance (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 360, image: 'https://placehold.co/400x400/E74C3C/FFFFFF?text=Marlboro%5CnAdvance&font=montserrat' },
+  { id: 29, name: 'Classic Regular (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 175, image: 'https://placehold.co/400x400/2C3E50/FFFFFF?text=Classic%5CnRegular&font=montserrat' },
+  { id: 30, name: 'Benson & Hedges (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 380, image: 'https://placehold.co/400x400/D4AF37/000000?text=Benson%5Cn&%5CnHedges&font=montserrat' },
 
   // Staples
   { id: 31, name: 'Aashirvaad Whole Wheat Atta', category: 'Staples', weight: '5 kg', price: 245, image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=640&q=85' },
