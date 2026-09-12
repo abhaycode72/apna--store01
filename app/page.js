@@ -1,9 +1,11 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { Search, ChevronRight, ShoppingBag } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import Header from '../src/store/src/components/Header';
 import ProductCard from '../src/store/src/components/src/components/ProductCard';
+import { useCartStore } from '../src/store/useCartStore';
+import { useRouter } from 'next/navigation';
 
 const products = [
   // Dairy & Breakfast
@@ -22,7 +24,7 @@ const products = [
   { id: 11, name: 'Red Apples (Washington)', category: 'Vegetables & Fruits', weight: '4 pieces', price: 140, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=640&q=85' },
   { id: 12, name: 'Green Chilli (Hari Mirch)', category: 'Vegetables & Fruits', weight: '100 g', price: 15, image: 'https://images.unsplash.com/photo-1588046892604-0c58e57f1854?auto=format&fit=crop&w=640&q=85' },
 
-  // Snacks & Munchies
+  // Snacks
   { id: 13, name: 'Lay\'s India\'s Magic Masala Chips', category: 'Snacks', weight: '50 g', price: 20, image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=640&q=85' },
   { id: 14, name: 'Kurkure Masala Munch', category: 'Snacks', weight: '90 g', price: 20, image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=640&q=85' },
   { id: 15, name: 'Haldiram\'s Bhujia Sev', category: 'Snacks', weight: '200 g', price: 55, image: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&w=640&q=85' },
@@ -34,94 +36,178 @@ const products = [
   { id: 19, name: 'Yippee Magic Masala Noodles', category: 'Instant Food', weight: '240 g', price: 45, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=640&q=85' },
   { id: 20, name: 'Quaker Oats', category: 'Instant Food', weight: '1 kg', price: 190, image: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=640&q=85' },
 
-  // Cold Drinks & Juices
+  // Beverages
   { id: 21, name: 'Coca-Cola', category: 'Beverages', weight: '750 ml', price: 40, image: 'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=640&q=85' },
   { id: 22, name: 'Thums Up', category: 'Beverages', weight: '750 ml', price: 40, image: 'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=640&q=85' },
   { id: 23, name: 'Red Bull Energy Drink', category: 'Beverages', weight: '250 ml', price: 125, image: 'https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=640&q=85' },
   { id: 24, name: 'Real Fruit Power Mixed Fruit', category: 'Beverages', weight: '1 L', price: 110, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=640&q=85' },
   { id: 25, name: 'Bisleri Mineral Water', category: 'Beverages', weight: '1 L', price: 20, image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=640&q=85' },
 
-  // Cigarettes & Tobacco
+  // Cigarettes
   { id: 26, name: 'Classic Milds (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 350, image: 'https://placehold.co/400x400/003366/FFFFFF?text=Classic%5CnMilds&font=montserrat' },
   { id: 27, name: 'Gold Flake Kings (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 180, image: 'https://placehold.co/400x400/F4D03F/000000?text=Gold%5CnFlake&font=montserrat' },
   { id: 28, name: 'Marlboro Advance (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 360, image: 'https://placehold.co/400x400/E74C3C/FFFFFF?text=Marlboro%5CnAdvance&font=montserrat' },
-  { id: 29, name: 'Classic Regular (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 175, image: 'https://placehold.co/400x400/2C3E50/FFFFFF?text=Classic%5CnRegular&font=montserrat' },
-  { id: 30, name: 'Benson & Hedges (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 380, image: 'https://placehold.co/400x400/D4AF37/000000?text=Benson%5Cn&%5CnHedges&font=montserrat' },
 
   // Staples
   { id: 31, name: 'Aashirvaad Whole Wheat Atta', category: 'Staples', weight: '5 kg', price: 245, image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=640&q=85' },
   { id: 32, name: 'India Gate Basmati Rice', category: 'Staples', weight: '5 kg', price: 495, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=640&q=85' },
   { id: 33, name: 'Tata Salt', category: 'Staples', weight: '1 kg', price: 28, image: 'https://images.unsplash.com/photo-1613946069412-38f7f1ff0b65?auto=format&fit=crop&w=640&q=85' },
-  { id: 34, name: 'Fortune Sunflower Oil', category: 'Staples', weight: '1 L', price: 145, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=640&q=85' },
-  { id: 35, name: 'Madhur Refined Sugar', category: 'Staples', weight: '1 kg', price: 55, image: 'https://images.unsplash.com/photo-1581006509489-026f784e13d9?auto=format&fit=crop&w=640&q=85' },
-
+  
   // Personal Care
   { id: 36, name: 'Dettol Original Soap', category: 'Personal Care', weight: '4 x 125 g', price: 165, image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=640&q=85' },
   { id: 37, name: 'Colgate MaxFresh Toothpaste', category: 'Personal Care', weight: '150 g', price: 115, image: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=640&q=85' },
-  { id: 38, name: 'Head & Shoulders Shampoo', category: 'Personal Care', weight: '340 ml', price: 340, image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=640&q=85' },
-  { id: 39, name: 'Nivea Men Deodorant', category: 'Personal Care', weight: '150 ml', price: 220, image: 'https://images.unsplash.com/photo-1594966601429-ca91307b22fc?auto=format&fit=crop&w=640&q=85' },
-
-  // Home & Cleaning
-  { id: 40, name: 'Surf Excel Easy Wash', category: 'Cleaning', weight: '1.5 kg', price: 185, image: 'https://images.unsplash.com/photo-1585832770485-e68a5dbfad52?auto=format&fit=crop&w=640&q=85' },
-  { id: 41, name: 'Vim Dishwash Gel', category: 'Cleaning', weight: '500 ml', price: 110, image: 'https://images.unsplash.com/photo-1584824388147-36e6329fc5f3?auto=format&fit=crop&w=640&q=85' },
-  { id: 42, name: 'Lizol Floor Cleaner', category: 'Cleaning', weight: '975 ml', price: 199, image: 'https://images.unsplash.com/photo-1584824388147-36e6329fc5f3?auto=format&fit=crop&w=640&q=85' },
-
-  // Sweet Tooth
-  { id: 43, name: 'Cadbury Dairy Milk Silk', category: 'Sweet Tooth', weight: '150 g', price: 175, image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?auto=format&fit=crop&w=640&q=85' },
-  { id: 44, name: 'Nestle KitKat', category: 'Sweet Tooth', weight: '38 g', price: 25, image: 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&w=640&q=85' },
-  { id: 45, name: 'Amul Vanilla Ice Cream', category: 'Sweet Tooth', weight: '1 L', price: 220, image: 'https://images.unsplash.com/photo-1570197781417-0a82375c9371?auto=format&fit=crop&w=640&q=85' },
-
-  // Stationery & More
-  { id: 46, name: 'Classmate Notebook (Ruled)', category: 'Stationery', weight: '160 pages', price: 55, image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=640&q=85' },
-  { id: 47, name: 'Cello Reynolds Blue Pen', category: 'Stationery', weight: 'Pack of 5', price: 50, image: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=640&q=85' },
-  { id: 48, name: 'Duracell AA Batteries', category: 'Electronics', weight: 'Pack of 4', price: 160, image: 'https://images.unsplash.com/photo-1611077544837-773df4fb4938?auto=format&fit=crop&w=640&q=85' },
-  { id: 49, name: 'Whisper Ultra Clean Pads', category: 'Personal Care', weight: '15 pads', price: 145, image: 'https://images.unsplash.com/photo-1584305574635-4303d7ae81ce?auto=format&fit=crop&w=640&q=85' },
-  { id: 50, name: 'Pampers Active Baby Diapers', category: 'Baby Care', weight: '42 Pieces (L)', price: 699, image: 'https://images.unsplash.com/photo-1518779836365-1d4416183e84?auto=format&fit=crop&w=640&q=85' },
 ];
 
+const categories = [...new Set(products.map(p => p.category))];
+
 export default function Home() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  
+  const { items } = useCartStore();
+  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const cartTotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const filteredProducts = products.filter((product) => {
     const searchableText = `${product.name} ${product.category} ${product.weight}`.toLowerCase();
     return searchableText.includes(searchQuery.toLowerCase().trim());
   });
 
+  // Group products by category when not searching
+  const groupedProducts = categories.reduce((acc, cat) => {
+    acc[cat] = products.filter(p => p.category === cat);
+    return acc;
+  }, {});
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat);
+    const element = document.getElementById(`category-${cat}`);
+    if (element) {
+      const yOffset = -120; 
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        <div className="store-banner-in mb-8 w-full rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 p-8 text-white shadow-sm">
-          <h2 className="mb-2 text-3xl font-black">apna store01, delivered in 10 minutes.</h2>
-          <p className="text-lg opacity-90">Fresh inventory routed from your local dark store.</p>
-        </div>
-        <div className="store-rise-in mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">Everything you need</h3>
-            <p className="mt-1 text-sm text-gray-500">Fresh groceries, snacks, drinks and stationery</p>
+      
+      {/* Category Nav - Sticky */}
+      <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-4 py-3">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryClick(cat)}
+                className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition ${
+                  activeCategory === cat 
+                  ? 'bg-purple-600 text-white shadow-md' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-          <label className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-100 sm:max-w-sm">
-            <Search size={19} className="shrink-0 text-gray-400" />
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-7xl px-4 py-6">
+        {/* Search Bar - Global */}
+        <div className="mb-8">
+          <label className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-500/10 transition-all">
+            <Search size={22} className="shrink-0 text-gray-400" />
             <input
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search milk, fruits, pen..."
+              placeholder="Search for milk, eggs, bread..."
               aria-label="Search products"
-              className="min-w-0 flex-1 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
+              className="min-w-0 flex-1 bg-transparent text-base font-medium text-gray-800 outline-none placeholder:text-gray-400"
             />
           </label>
         </div>
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-            {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+
+        {searchQuery.trim() !== '' ? (
+          /* Search Results View */
+          <div>
+            <h3 className="text-xl font-black text-gray-900 mb-4">Search Results for "{searchQuery}"</h3>
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+                {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+              </div>
+            ) : (
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
+                <Search size={48} className="mx-auto text-gray-300 mb-4" />
+                <p className="font-bold text-gray-900 text-lg">No items found</p>
+                <p className="mt-1 text-sm text-gray-500">Check spelling or try a different term.</p>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 px-6 py-14 text-center">
-            <p className="font-bold text-gray-800">No products found</p>
-            <p className="mt-1 text-sm text-gray-500">Try searching for fruits, coffee, copy or stationery.</p>
+          /* Categorized View */
+          <div className="space-y-12">
+            {categories.map((cat) => (
+              <section key={cat} id={`category-${cat}`} className="scroll-mt-32">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl md:text-2xl font-black text-gray-900">{cat}</h3>
+                  <button className="text-sm font-bold text-purple-600 flex items-center hover:underline">
+                    See All <ChevronRight size={16} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+                  {groupedProducts[cat].slice(0, 5).map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         )}
       </main>
+
+      {/* Sticky Bottom Cart (Mobile & Desktop App-like experience) */}
+      {mounted && cartCount > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom-full duration-300">
+          <div className="max-w-4xl mx-auto">
+            <div 
+              onClick={() => router.push('/checkout')}
+              className="bg-emerald-600 rounded-2xl shadow-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-emerald-700 transition transform hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-4 text-white">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <ShoppingBag size={24} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-100 uppercase tracking-wider">{cartCount} Item{cartCount > 1 ? 's' : ''}</p>
+                  <p className="text-lg font-black">₹{cartTotal}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-white font-black text-lg">
+                View Cart <ChevronRight size={24} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hide default scrollbars for smooth UI */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}} />
     </div>
   );
 }
