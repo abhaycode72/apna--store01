@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, Phone } from 'lucide-react';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const login = useAuthStore((state) => state.login);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -20,6 +23,13 @@ export default function LoginPage() {
     setTimeout(() => {
       setIsLoading(false);
       setIsSuccess(true);
+      
+      // Save user to global state (mock data for now)
+      login({
+        name: isLogin ? 'Demo User' : e.target[0].value,
+        email: 'user@example.com',
+        phone: '+91 9876543210'
+      });
       
       // Redirect to home after 1.5s
       setTimeout(() => {

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../../../../lib/supabase';
 import {
   AlertTriangle,
   Bike,
@@ -82,44 +84,10 @@ function Alerts() {
   return <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><AlertTriangle className="text-amber-400" size={18} />Dark Store Alerts</h2><div className="space-y-3 text-xs"><div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3"><b className="text-amber-400">Stock Out Risk</b><p className="mt-1 text-slate-300">Fresh Milk down to 3 units in Patna Central.</p></div><div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3"><b className="text-red-400">Rider Bottleneck</b><p className="mt-1 text-slate-300">Kankerbagh DS has 8 pending orders.</p></div><div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3"><b className="text-blue-400">COD Cap Triggered</b><p className="mt-1 text-slate-300">Orders above ₹1,000 route to online payment.</p></div></div></section>;
 }
 
-function AdminLogin({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  async function submitLogin(event) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError('');
-    const response = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    if (response.ok) onLogin();
-    else setError('Invalid username or password.');
-    setSubmitting(false);
-  }
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-900 px-4 text-slate-100">
-      <form onSubmit={submitLogin} className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-950 p-8 shadow-xl">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">apna store01</p>
-        <h1 className="mt-2 text-2xl font-black">Admin login</h1>
-        <p className="mt-2 text-sm text-slate-400">Sign in to access the control center.</p>
-        <label className="mt-6 block text-sm font-semibold">Username<input value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-white outline-none focus:border-purple-500" autoComplete="username" required /></label>
-        <label className="mt-4 block text-sm font-semibold">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-white outline-none focus:border-purple-500" autoComplete="current-password" required /></label>
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-        <button type="submit" disabled={submitting} className="mt-6 w-full rounded-lg bg-purple-600 px-4 py-3 font-bold text-white transition hover:bg-purple-500 disabled:cursor-wait disabled:opacity-60">{submitting ? 'Signing in...' : 'Sign in'}</button>
-      </form>
-    </main>
-  );
-}
-
 export default function AdminDashboard() {
-  const [authenticated, setAuthenticated] = useState(null);
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [darkStoreActive, setDarkStoreActive] = useState(true);
   const [codLimit, setCodLimit] = useState('1000');
   const [fraudCheck, setFraudCheck] = useState(true);
@@ -137,11 +105,19 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetch('/api/admin/session').then((response) => setAuthenticated(response.ok)).catch(() => setAuthenticated(false));
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/admin/login');
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
-    if (!authenticated) return;
+    if (!isAuthorized) return;
     fetch('/api/admin/orders').then((response) => response.ok ? response.json() : null).then((result) => {
       if (!result?.orders?.length) return;
       setLiveOrders(result.orders.map((order) => ({
@@ -157,7 +133,7 @@ export default function AdminDashboard() {
         status: order.status,
       })));
     }).catch(() => {});
-  }, [authenticated]);
+  }, [isAuthorized]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('apna-admin-settings');
@@ -175,8 +151,8 @@ export default function AdminDashboard() {
   }, []);
 
   async function logout() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    setAuthenticated(false);
+    await supabase.auth.signOut();
+    router.push('/admin/login');
   }
 
   async function updateLiveOrder(orderId, updates) {
@@ -190,8 +166,7 @@ export default function AdminDashboard() {
     setLiveOrders((current) => current.map((order) => order.id === orderId ? { ...order, ...updates } : order));
   }
 
-  if (authenticated === null) return <div className="min-h-screen bg-slate-900" />;
-  if (!authenticated) return <AdminLogin onLogin={() => setAuthenticated(true)} />;
+  if (!isAuthorized) return <div className="flex min-h-screen items-center justify-center bg-slate-950 font-black text-purple-500">Securing environment...</div>;
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
