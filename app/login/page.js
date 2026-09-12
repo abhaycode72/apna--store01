@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, Phone } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, Phone, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../src/store/useAuthStore';
+import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,30 +13,82 @@ export default function LoginPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
 
   const login = useAuthStore((state) => state.login);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg('');
     
-    // Simulate API call for login/signup
-    setTimeout(() => {
+    try {
+      if (isLogin) {
+        // SUPABASE LOGIN
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) throw error;
+        
+        // Success
+        setIsSuccess(true);
+        login({
+          name: data.user.user_metadata?.name || email.split('@')[0],
+          email: data.user.email,
+          phone: data.user.user_metadata?.phone || '',
+          id: data.user.id
+        });
+
+        // Check if ADMIN
+        const isAdmin = data.user.email === 'admin@apnastore.com' || data.user.email === 'mayank@apnastore.com';
+        
+        setTimeout(() => {
+          if (isAdmin) {
+            localStorage.setItem('isAdmin', 'true');
+            router.push('/admin');
+          } else {
+            router.push('/');
+          }
+        }, 1500);
+
+      } else {
+        // SUPABASE SIGN UP
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name,
+              phone
+            }
+          }
+        });
+        
+        if (error) throw error;
+        
+        setIsSuccess(true);
+        login({
+          name: name || email.split('@')[0],
+          email: email,
+          phone: phone,
+          id: data.user?.id
+        });
+        
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
+      }
+    } catch (err) {
+      setErrorMsg(err.message);
       setIsLoading(false);
-      setIsSuccess(true);
-      
-      // Save user to global state (mock data for now)
-      login({
-        name: isLogin ? 'Demo User' : e.target[0].value,
-        email: 'user@example.com',
-        phone: '+91 9876543210'
-      });
-      
-      // Redirect to home after 1.5s
-      setTimeout(() => {
-        router.push('/');
-      }, 1500);
-    }, 1500);
+    }
   };
 
   return (
@@ -134,6 +187,13 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
+                {errorMsg && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold">
+                    <AlertCircle size={18} />
+                    {errorMsg}
+                  </div>
+                )}
+                
                 {/* Name Field (Only for Sign Up) */}
                 <div className={`space-y-1.5 transition-all duration-300 ${isLogin ? 'hidden opacity-0' : 'block opacity-100'}`}>
                   <label className="text-sm font-bold text-gray-700">Full Name</label>
@@ -144,6 +204,8 @@ export default function LoginPage() {
                     <input 
                       type="text" 
                       placeholder="John Doe" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       required={!isLogin}
                       className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
                     />
@@ -160,6 +222,8 @@ export default function LoginPage() {
                     <input 
                       type="email" 
                       placeholder="you@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
                     />
@@ -176,6 +240,8 @@ export default function LoginPage() {
                     <input 
                       type="tel" 
                       placeholder="+91 98765 43210" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       required={!isLogin}
                       className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
                     />
@@ -197,6 +263,8 @@ export default function LoginPage() {
                     <input 
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                       className="w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
                     />
