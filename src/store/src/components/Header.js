@@ -1,5 +1,5 @@
  'use client';
-import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
+import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound, LogOut, Package, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '../../useCartStore';
@@ -10,6 +10,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const items = useCartStore((state) => state.items);
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
@@ -42,10 +43,34 @@ export default function Header() {
             <span>Customer Service</span>
           </button>
           {mounted && user ? (
-            <button onClick={() => router.push('/dashboard')} aria-label="Dashboard" title="Dashboard" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 bg-purple-50 transition hover:bg-purple-100">
-              <UserRound size={18} />
-              <span>Dashboard</span>
-            </button>
+            <div className="relative group">
+              <button onClick={() => router.push('/dashboard')} aria-label="Dashboard" title="Dashboard" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 bg-purple-50 transition hover:bg-purple-100">
+                <UserRound size={18} />
+                <span>{user.name || 'Dashboard'}</span>
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+                <div className="p-2 space-y-1">
+                  <button onClick={() => router.push('/dashboard')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-700 rounded-lg hover:bg-purple-50 hover:text-purple-700 transition">
+                    <User size={16} /> Dashboard
+                  </button>
+                  <button onClick={() => router.push('/dashboard')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-700 rounded-lg hover:bg-purple-50 hover:text-purple-700 transition">
+                    <Package size={16} /> My Orders
+                  </button>
+                  <div className="h-px bg-gray-100 my-1 mx-2"></div>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      router.push('/');
+                    }} 
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-600 rounded-lg hover:bg-red-50 transition"
+                  >
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : mounted ? (
             <button onClick={() => router.push('/login')} aria-label="Login" title="Login" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 transition hover:bg-purple-50">
               <UserRound size={18} />

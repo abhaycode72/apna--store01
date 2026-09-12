@@ -18,6 +18,13 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
+      // Demo Bypass for the user who hasn't configured Supabase yet
+      if (email === 'admin@apnastore.com' && password === 'admin') {
+        localStorage.setItem('admin-bypass', 'true');
+        router.push('/admin');
+        return;
+      }
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
