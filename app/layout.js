@@ -8,10 +8,19 @@ export const metadata = {
   },
 };
 
+import GlobalSidebar from '../src/store/src/components/GlobalSidebar';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <div className="flex min-h-screen bg-gray-50">
+          <GlobalSidebar />
+          <div className="flex-1 min-w-0">
+            {children}
+          </div>
+        </div>
+      </body>
     </html>
   );
 }
