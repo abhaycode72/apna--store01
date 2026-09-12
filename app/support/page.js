@@ -76,10 +76,22 @@ export default function SupportPage() {
     }
 
     setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        text: "Thanks for reaching out! One of our support agents will look into this right away.", 
-        isAgent: true 
-      }]);
+      const lower = currentInput.toLowerCase();
+      let reply = "Thanks for reaching out! One of our support agents will look into this right away.";
+      
+      if (lower.includes("order") || lower.includes("kab aayega") || lower.includes("track") || lower.includes("delivery") || lower.includes("late")) {
+        reply = "Please provide your Order ID (e.g., ORD-9021) and I will track its exact rider location for you.";
+      } else if (lower.includes("missing") || lower.includes("nahi mila") || lower.includes("wrong") || lower.includes("galat") || lower.includes("kharab")) {
+        reply = "I apologize for the inconvenience! Please share the Order ID. We will verify with the packing store and issue a refund or replacement immediately.";
+      } else if (lower.includes("cancel")) {
+        reply = "You can cancel your order directly from the 'My Orders' section before the packing begins. If it's already packed, it cannot be cancelled.";
+      } else if (lower.includes("refund") || lower.includes("paisa") || lower.includes("money") || lower.includes("payment")) {
+        reply = "Refunds are processed instantly from our side. However, it can take 3-5 business days for your bank to credit it to your original payment method.";
+      } else if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey") || lower.includes("namaste")) {
+        reply = "Hello there! How can I help you with your Apna Store delivery today?";
+      }
+
+      setMessages(prev => [...prev, { text: reply, isAgent: true }]);
     }, 1000);
   };
 
