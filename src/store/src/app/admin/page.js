@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Store,
   TrendingUp,
+  Headphones,
 } from 'lucide-react';
 
 const sections = [
@@ -21,12 +22,19 @@ const sections = [
   { id: 'stores', label: 'Dark Stores', icon: Store },
   { id: 'fleet', label: 'Fleet / Riders', icon: Bike },
   { id: 'fraud', label: 'COD & Fraud Rules', icon: ShieldAlert },
+  { id: 'support', label: 'Customer Service', icon: Headphones },
 ];
 
 const orders = [
   { id: 'ORD-9021', customer: 'Rahul Kumar', store: 'Patna Central DS', total: 340, mode: 'UPI', status: 'Out for Delivery' },
   { id: 'ORD-9022', customer: 'Priya Sharma', store: 'Kankerbagh DS', total: 180, mode: 'COD', status: 'Packing' },
   { id: 'ORD-9023', customer: 'Amit Verma', store: 'Boring Road DS', total: 890, mode: 'UPI', status: 'Order Placed' },
+];
+
+const initialTickets = [
+  { id: 'TKT-101', customer: 'Rohan Gupta', email: 'rohan.g@example.com', subject: 'Missing Item in Order', type: 'email support', status: 'Open', date: '2026-09-12' },
+  { id: 'TKT-102', customer: 'Anonymous', email: 'N/A', subject: 'My order is delayed, please help', type: 'chat', status: 'Resolved', date: '2026-09-11' },
+  { id: 'TKT-103', customer: 'Sneha Singh', email: 'sneha@example.com', subject: 'Refund not received', type: 'email support', status: 'In Progress', date: '2026-09-11' },
 ];
 
 const stats = [
@@ -120,6 +128,7 @@ export default function AdminDashboard() {
   const [stores, setStores] = useState(defaultStores);
   const [riders, setRiders] = useState({ active: 32, available: 28, onBreak: 4 });
   const [liveOrders, setLiveOrders] = useState(orders);
+  const [tickets, setTickets] = useState(initialTickets);
   const activeLabel = sections.find((section) => section.id === activeSection)?.label;
   const saveSettings = () => {
     localStorage.setItem('apna-admin-settings', JSON.stringify({ stores, riders, darkStoreActive, codLimit, fraudCheck }));
@@ -202,6 +211,36 @@ export default function AdminDashboard() {
         {activeSection === 'stores' && <Panel title="Dark Stores" subtitle="Edit store names, descriptions and availability."><div className="grid gap-4 md:grid-cols-2">{stores.map((store, index) => <div key={`${store.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900 p-4"><label className="block text-xs font-semibold text-slate-400">Store name<input value={store.name} onChange={(event) => setStores((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm font-bold text-white outline-none focus:border-purple-500" /></label><label className="mt-3 block text-xs font-semibold text-slate-400">Description<input value={store.description} onChange={(event) => setStores((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 outline-none focus:border-purple-500" /></label><span className={`mt-4 inline-block rounded-full px-2 py-1 text-[10px] font-bold ${darkStoreActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{darkStoreActive ? 'ONLINE' : 'PAUSED'}</span></div>)}</div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
         {activeSection === 'fleet' && <Panel title="Fleet / Riders" subtitle="Edit rider availability and delivery capacity."><div className="grid gap-4 sm:grid-cols-3">{[['active', 'Active riders'], ['available', 'Available now'], ['onBreak', 'On break']].map(([key, label]) => <label key={key} className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-xs font-semibold text-slate-400">{label}<input type="number" min="0" value={riders[key]} onChange={(event) => setRiders((current) => ({ ...current, [key]: Number(event.target.value) }))} className="mt-2 w-full bg-transparent text-2xl font-black text-white outline-none" /></label>)}</div><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
         {activeSection === 'fraud' && <Panel title="COD & Fraud Rules" subtitle="Control payment risk and cash collection limits."><label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-4"><span><span className="block font-bold">Enable fraud screening</span><span className="text-xs text-slate-400">Flag repeated cancellations and suspicious COD activity.</span></span><input type="checkbox" checked={fraudCheck} onChange={(event) => setFraudCheck(event.target.checked)} className="h-5 w-5 accent-purple-600" /></label><label className="mt-4 block max-w-sm"><span className="mb-2 block text-sm font-bold">Maximum COD order value</span><div className="flex items-center gap-2"><span className="text-slate-400">₹</span><input type="number" min="0" value={codLimit} onChange={(event) => setCodLimit(event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-purple-500" /></div></label><SaveButton saved={saved} onSave={saveSettings} /></Panel>}
+        {activeSection === 'support' && (
+          <Panel title="Customer Service" subtitle="View and manage customer queries, complaints, and live chat history.">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px] text-left text-xs text-slate-300">
+                <thead className="bg-slate-900 text-slate-400 uppercase font-semibold">
+                  <tr><th className="p-3">Ticket ID</th><th className="p-3">Customer</th><th className="p-3">Type</th><th className="p-3">Issue / Message</th><th className="p-3">Date</th><th className="p-3">Status</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {tickets.map((tkt) => (
+                    <tr key={tkt.id} className="hover:bg-slate-900/50">
+                      <td className="p-3 font-mono font-bold text-purple-400">{tkt.id}</td>
+                      <td className="p-3"><span className="font-semibold text-white">{tkt.customer}</span><span className="mt-1 block text-[10px] text-slate-500">{tkt.email}</span></td>
+                      <td className="p-3"><span className={`rounded px-2 py-0.5 font-bold ${tkt.type === 'chat' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>{tkt.type}</span></td>
+                      <td className="p-3 max-w-xs truncate">{tkt.subject}</td>
+                      <td className="p-3">{tkt.date}</td>
+                      <td className="p-3">
+                        <select value={tkt.status} onChange={(e) => setTickets(current => current.map(t => t.id === tkt.id ? {...t, status: e.target.value} : t))} className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs font-semibold text-purple-400">
+                          <option>Open</option>
+                          <option>In Progress</option>
+                          <option>Resolved</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {tickets.length === 0 && <p className="py-8 text-center text-sm text-slate-500">No support tickets found.</p>}
+            </div>
+          </Panel>
+        )}
       </main>
     </div>
   );

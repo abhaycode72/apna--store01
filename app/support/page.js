@@ -14,10 +14,53 @@ export default function SupportPage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [messageSent, setMessageSent] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { text: "Hi! How can I help you today?", isAgent: true }
+  ]);
+  const [chatInput, setChatInput] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    const email = event.target[0].value;
+    const message = event.target[1].value;
+
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, message, type: 'email support' })
+      });
+    } catch (e) {
+      console.error('Failed to send email:', e);
+    }
+
     setMessageSent(true);
+  };
+
+  const handleChatSubmit = async (event) => {
+    event.preventDefault();
+    const currentInput = chatInput.trim();
+    if (!currentInput) return;
+
+    setMessages(prev => [...prev, { text: currentInput, isAgent: false }]);
+    setChatInput('');
+
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: '', message: currentInput, type: 'chat' })
+      });
+    } catch (e) {
+      console.error('Failed to send chat email:', e);
+    }
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        text: "Thanks for reaching out! One of our support agents will look into this right away.", 
+        isAgent: true 
+      }]);
+    }, 1000);
   };
 
   return (
@@ -67,8 +110,26 @@ export default function SupportPage() {
               </div>
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Agent online</span>
             </div>
-            <form onSubmit={(event) => { event.preventDefault(); setChatOpen(false); setMessageSent(true); }} className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <input required aria-label="Chat message" placeholder="Type your message..." className="min-w-0 flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
+            
+            <div className="mt-4 h-64 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.isAgent ? 'justify-start' : 'justify-end'}`}>
+                  <div className={`rounded-xl px-4 py-2 text-sm max-w-[80%] ${msg.isAgent ? 'bg-white border border-gray-200 text-gray-800' : 'bg-purple-600 text-white'}`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleChatSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <input 
+                required 
+                aria-label="Chat message" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Type your message..." 
+                className="min-w-0 flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" 
+              />
               <button type="submit" className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700"><Send size={17} /> Send</button>
             </form>
           </section>
