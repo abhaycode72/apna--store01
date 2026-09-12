@@ -6,34 +6,77 @@ import Header from '../src/store/src/components/Header';
 import ProductCard from '../src/store/src/components/src/components/ProductCard';
 
 const products = [
-  { id: 1, name: 'Farm Fresh Milk', category: 'Dairy', weight: '500 ml', price: 32, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=640&q=85' },
-  { id: 2, name: 'Whole Wheat Bread', category: 'Bakery', weight: '400 g', price: 45, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=640&q=85' },
-  { id: 3, name: 'Red Onions', category: 'Vegetables', weight: '1 kg', price: 60, image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=640&q=85' },
-  { id: 4, name: 'Maggi 2-Minute Noodles', category: 'Instant Food', weight: '140 g', price: 28, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=640&q=85' },
-  { id: 5, name: 'Fresh Bananas', category: 'Fruits', weight: '6 pieces', price: 42, image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=640&q=85' },
-  { id: 6, name: 'Red Apples', category: 'Fruits', weight: '4 pieces', price: 120, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=640&q=85' },
-  { id: 7, name: 'Milk Chocolate', category: 'Chocolates', weight: '110 g', price: 95, image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?auto=format&fit=crop&w=640&q=85' },
-  { id: 8, name: 'Classic Cold Drink', category: 'Beverages', weight: '750 ml', price: 45, image: 'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=640&q=85' },
-  { id: 9, name: 'Instant Coffee', category: 'Beverages', weight: '100 g', price: 180, image: 'https://images.unsplash.com/photo-1512568400610-62da28bc8a13?auto=format&fit=crop&w=640&q=85' },
-  { id: 10, name: 'Masala Tea', category: 'Beverages', weight: '250 g', price: 110, image: 'https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?auto=format&fit=crop&w=640&q=85' },
-  { id: 11, name: 'College Copy Notebook', category: 'Stationery', weight: '160 pages', price: 55, image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=640&q=85' },
-  { id: 12, name: 'Blue Ball Pen', category: 'Stationery', weight: 'Pack of 5', price: 50, image: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=640&q=85' },
-  { id: 13, name: 'HB Pencils', category: 'Stationery', weight: 'Pack of 10', price: 40, image: 'https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?auto=format&fit=crop&w=640&q=85' },
-  { id: 14, name: 'Farm Fresh Eggs', category: 'Dairy', weight: 'Pack of 6', price: 48, image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?auto=format&fit=crop&w=640&q=85' },
-  { id: 15, name: 'Potato Chips', category: 'Snacks', weight: '100 g', price: 35, image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=640&q=85' },
-  { id: 16, name: 'Bath Soap', category: 'Personal Care', weight: '100 g', price: 38, image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=640&q=85' },
-  { id: 17, name: 'Basmati Rice', category: 'Staples', weight: '5 kg', price: 525, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=640&q=85' },
-  { id: 18, name: 'Whole Wheat Atta', category: 'Staples', weight: '5 kg', price: 285, image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=640&q=85' },
-  { id: 19, name: 'Toor Dal', category: 'Staples', weight: '1 kg', price: 165, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=640&q=85' },
-  { id: 20, name: 'Sunflower Cooking Oil', category: 'Staples', weight: '1 litre', price: 145, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=640&q=85' },
-  { id: 21, name: 'Fresh Curd', category: 'Dairy', weight: '400 g', price: 50, image: 'https://images.unsplash.com/photo-1571212515416-fef01fc43637?auto=format&fit=crop&w=640&q=85' },
-  { id: 22, name: 'Paneer Cubes', category: 'Dairy', weight: '200 g', price: 95, image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=640&q=85' },
-  { id: 23, name: 'Orange Juice', category: 'Beverages', weight: '1 litre', price: 120, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=640&q=85' },
-  { id: 24, name: 'Mineral Water', category: 'Beverages', weight: '1 litre', price: 20, image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=640&q=85' },
-  { id: 25, name: 'Cream Biscuits', category: 'Snacks', weight: '120 g', price: 30, image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=640&q=85' },
-  { id: 26, name: 'Toothpaste', category: 'Personal Care', weight: '150 g', price: 110, image: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=640&q=85' },
-  { id: 27, name: 'Shampoo', category: 'Personal Care', weight: '340 ml', price: 245, image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=640&q=85' },
-  { id: 28, name: 'Laundry Detergent', category: 'Home Care', weight: '2 kg', price: 210, image: 'https://images.unsplash.com/photo-1585832770485-e68a5dbfad52?auto=format&fit=crop&w=640&q=85' },
+  // Dairy & Breakfast
+  { id: 1, name: 'Amul Taaza Toned Milk', category: 'Dairy & Breakfast', weight: '500 ml', price: 27, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=640&q=85' },
+  { id: 2, name: 'Amul Butter', category: 'Dairy & Breakfast', weight: '100 g', price: 58, image: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&w=640&q=85' },
+  { id: 3, name: 'Britannia White Bread', category: 'Dairy & Breakfast', weight: '400 g', price: 45, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=640&q=85' },
+  { id: 4, name: 'Farm Fresh Eggs', category: 'Dairy & Breakfast', weight: '6 pieces', price: 48, image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?auto=format&fit=crop&w=640&q=85' },
+  { id: 5, name: 'Mother Dairy Classic Curd', category: 'Dairy & Breakfast', weight: '400 g', price: 35, image: 'https://images.unsplash.com/photo-1571212515416-fef01fc43637?auto=format&fit=crop&w=640&q=85' },
+  { id: 6, name: 'Milky Mist Paneer', category: 'Dairy & Breakfast', weight: '200 g', price: 95, image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=640&q=85' },
+  
+  // Vegetables & Fruits
+  { id: 7, name: 'Onion (Pyaz)', category: 'Vegetables & Fruits', weight: '1 kg', price: 35, image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=640&q=85' },
+  { id: 8, name: 'Potato (Aloo)', category: 'Vegetables & Fruits', weight: '1 kg', price: 30, image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=640&q=85' },
+  { id: 9, name: 'Tomato (Tamatar)', category: 'Vegetables & Fruits', weight: '1 kg', price: 45, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=640&q=85' },
+  { id: 10, name: 'Fresh Bananas', category: 'Vegetables & Fruits', weight: '6 pieces', price: 42, image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=640&q=85' },
+  { id: 11, name: 'Red Apples (Washington)', category: 'Vegetables & Fruits', weight: '4 pieces', price: 140, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=640&q=85' },
+  { id: 12, name: 'Green Chilli (Hari Mirch)', category: 'Vegetables & Fruits', weight: '100 g', price: 15, image: 'https://images.unsplash.com/photo-1588046892604-0c58e57f1854?auto=format&fit=crop&w=640&q=85' },
+
+  // Snacks & Munchies
+  { id: 13, name: 'Lay\'s India\'s Magic Masala Chips', category: 'Snacks', weight: '50 g', price: 20, image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=640&q=85' },
+  { id: 14, name: 'Kurkure Masala Munch', category: 'Snacks', weight: '90 g', price: 20, image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=640&q=85' },
+  { id: 15, name: 'Haldiram\'s Bhujia Sev', category: 'Snacks', weight: '200 g', price: 55, image: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&w=640&q=85' },
+  { id: 16, name: 'Doritos Nacho Cheese', category: 'Snacks', weight: '60 g', price: 30, image: 'https://images.unsplash.com/photo-1613525287515-56543b591b61?auto=format&fit=crop&w=640&q=85' },
+  { id: 17, name: 'Britannia Good Day Cashew', category: 'Snacks', weight: '200 g', price: 35, image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=640&q=85' },
+
+  // Instant Food
+  { id: 18, name: 'Maggi 2-Minute Masala Noodles', category: 'Instant Food', weight: '140 g', price: 28, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=640&q=85' },
+  { id: 19, name: 'Yippee Magic Masala Noodles', category: 'Instant Food', weight: '240 g', price: 45, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=640&q=85' },
+  { id: 20, name: 'Quaker Oats', category: 'Instant Food', weight: '1 kg', price: 190, image: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=640&q=85' },
+
+  // Cold Drinks & Juices
+  { id: 21, name: 'Coca-Cola', category: 'Beverages', weight: '750 ml', price: 40, image: 'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=640&q=85' },
+  { id: 22, name: 'Thums Up', category: 'Beverages', weight: '750 ml', price: 40, image: 'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=640&q=85' },
+  { id: 23, name: 'Red Bull Energy Drink', category: 'Beverages', weight: '250 ml', price: 125, image: 'https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=640&q=85' },
+  { id: 24, name: 'Real Fruit Power Mixed Fruit', category: 'Beverages', weight: '1 L', price: 110, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=640&q=85' },
+  { id: 25, name: 'Bisleri Mineral Water', category: 'Beverages', weight: '1 L', price: 20, image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=640&q=85' },
+
+  // Cigarettes & Tobacco
+  { id: 26, name: 'Classic Milds (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 350, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+  { id: 27, name: 'Gold Flake Kings (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 180, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+  { id: 28, name: 'Marlboro Advance (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 360, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+  { id: 29, name: 'Classic Regular (Pack of 10)', category: 'Cigarettes', weight: '1 pack', price: 175, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+  { id: 30, name: 'Benson & Hedges (Pack of 20)', category: 'Cigarettes', weight: '1 pack', price: 380, image: 'https://images.unsplash.com/photo-1522066869502-120050ee5ee2?auto=format&fit=crop&w=640&q=85' },
+
+  // Staples
+  { id: 31, name: 'Aashirvaad Whole Wheat Atta', category: 'Staples', weight: '5 kg', price: 245, image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=640&q=85' },
+  { id: 32, name: 'India Gate Basmati Rice', category: 'Staples', weight: '5 kg', price: 495, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=640&q=85' },
+  { id: 33, name: 'Tata Salt', category: 'Staples', weight: '1 kg', price: 28, image: 'https://images.unsplash.com/photo-1613946069412-38f7f1ff0b65?auto=format&fit=crop&w=640&q=85' },
+  { id: 34, name: 'Fortune Sunflower Oil', category: 'Staples', weight: '1 L', price: 145, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=640&q=85' },
+  { id: 35, name: 'Madhur Refined Sugar', category: 'Staples', weight: '1 kg', price: 55, image: 'https://images.unsplash.com/photo-1581006509489-026f784e13d9?auto=format&fit=crop&w=640&q=85' },
+
+  // Personal Care
+  { id: 36, name: 'Dettol Original Soap', category: 'Personal Care', weight: '4 x 125 g', price: 165, image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=640&q=85' },
+  { id: 37, name: 'Colgate MaxFresh Toothpaste', category: 'Personal Care', weight: '150 g', price: 115, image: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=640&q=85' },
+  { id: 38, name: 'Head & Shoulders Shampoo', category: 'Personal Care', weight: '340 ml', price: 340, image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=640&q=85' },
+  { id: 39, name: 'Nivea Men Deodorant', category: 'Personal Care', weight: '150 ml', price: 220, image: 'https://images.unsplash.com/photo-1594966601429-ca91307b22fc?auto=format&fit=crop&w=640&q=85' },
+
+  // Home & Cleaning
+  { id: 40, name: 'Surf Excel Easy Wash', category: 'Cleaning', weight: '1.5 kg', price: 185, image: 'https://images.unsplash.com/photo-1585832770485-e68a5dbfad52?auto=format&fit=crop&w=640&q=85' },
+  { id: 41, name: 'Vim Dishwash Gel', category: 'Cleaning', weight: '500 ml', price: 110, image: 'https://images.unsplash.com/photo-1584824388147-36e6329fc5f3?auto=format&fit=crop&w=640&q=85' },
+  { id: 42, name: 'Lizol Floor Cleaner', category: 'Cleaning', weight: '975 ml', price: 199, image: 'https://images.unsplash.com/photo-1584824388147-36e6329fc5f3?auto=format&fit=crop&w=640&q=85' },
+
+  // Sweet Tooth
+  { id: 43, name: 'Cadbury Dairy Milk Silk', category: 'Sweet Tooth', weight: '150 g', price: 175, image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?auto=format&fit=crop&w=640&q=85' },
+  { id: 44, name: 'Nestle KitKat', category: 'Sweet Tooth', weight: '38 g', price: 25, image: 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&w=640&q=85' },
+  { id: 45, name: 'Amul Vanilla Ice Cream', category: 'Sweet Tooth', weight: '1 L', price: 220, image: 'https://images.unsplash.com/photo-1570197781417-0a82375c9371?auto=format&fit=crop&w=640&q=85' },
+
+  // Stationery & More
+  { id: 46, name: 'Classmate Notebook (Ruled)', category: 'Stationery', weight: '160 pages', price: 55, image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=640&q=85' },
+  { id: 47, name: 'Cello Reynolds Blue Pen', category: 'Stationery', weight: 'Pack of 5', price: 50, image: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=640&q=85' },
+  { id: 48, name: 'Duracell AA Batteries', category: 'Electronics', weight: 'Pack of 4', price: 160, image: 'https://images.unsplash.com/photo-1611077544837-773df4fb4938?auto=format&fit=crop&w=640&q=85' },
+  { id: 49, name: 'Whisper Ultra Clean Pads', category: 'Personal Care', weight: '15 pads', price: 145, image: 'https://images.unsplash.com/photo-1584305574635-4303d7ae81ce?auto=format&fit=crop&w=640&q=85' },
+  { id: 50, name: 'Pampers Active Baby Diapers', category: 'Baby Care', weight: '42 Pieces (L)', price: 699, image: 'https://images.unsplash.com/photo-1518779836365-1d4416183e84?auto=format&fit=crop&w=640&q=85' },
 ];
 
 export default function Home() {
