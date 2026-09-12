@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, Phone } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -154,12 +156,28 @@ export default function LoginPage() {
                   </div>
                 </div>
 
+                {/* Phone Field (Only for Sign Up) */}
+                <div className={`space-y-1.5 transition-all duration-300 ${isLogin ? 'hidden opacity-0' : 'block opacity-100'}`}>
+                  <label className="text-sm font-bold text-gray-700">Phone Number</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                      <Phone size={18} />
+                    </div>
+                    <input 
+                      type="tel" 
+                      placeholder="+91 98765 43210" 
+                      required={!isLogin}
+                      className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
                 {/* Password Field */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-bold text-gray-700">Password</label>
                     {isLogin && (
-                      <a href="#" className="text-xs font-bold text-purple-600 hover:text-purple-700 transition">Forgot password?</a>
+                      <a href="#" className="text-sm font-bold text-purple-600 hover:text-purple-800 hover:underline transition">Forgot password?</a>
                     )}
                   </div>
                   <div className="relative">
@@ -167,11 +185,41 @@ export default function LoginPage() {
                       <Lock size={18} />
                     </div>
                     <input 
-                      type="password" 
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••" 
                       required
-                      className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                      className="w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
                     />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password Field (Only for Sign Up) */}
+                <div className={`space-y-1.5 transition-all duration-300 ${isLogin ? 'hidden opacity-0' : 'block opacity-100'}`}>
+                  <label className="text-sm font-bold text-gray-700">Confirm Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                      <Lock size={18} />
+                    </div>
+                    <input 
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="••••••••" 
+                      required={!isLogin}
+                      className="w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
