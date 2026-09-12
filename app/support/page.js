@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, ChevronDown, Headphones, Mail, MessageCircle, Phone, Send, ShieldCheck } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowRight, ChevronDown, Headphones, Mail, MessageCircle, Phone, Send, ShieldCheck, AlertCircle } from 'lucide-react';
 import Header from '../../src/store/src/components/Header';
 
 const faqs = [
@@ -13,28 +13,48 @@ const faqs = [
 export default function SupportPage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [messageSent, setMessageSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Hi! How can I help you today?", isAgent: true }
   ]);
   const [chatInput, setChatInput] = useState('');
 
+  const chatContainerRef = useRef(null);
+
+  // Auto-scroll chat when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const email = event.target[0].value;
     const message = event.target[1].value;
 
+    setIsSubmitting(true);
+    setErrorMessage('');
+
     try {
-      await fetch('/api/contact', {
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, message, type: 'email support' })
       });
+      
+      if (!res.ok) {
+        throw new Error('Failed to send. Please try again or use direct email.');
+      }
+      setMessageSent(true);
     } catch (e) {
       console.error('Failed to send email:', e);
+      setErrorMessage(e.message || 'Something went wrong.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setMessageSent(true);
   };
 
   const handleChatSubmit = async (event) => {
@@ -111,7 +131,7 @@ export default function SupportPage() {
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Agent online</span>
             </div>
             
-            <div className="mt-4 h-64 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+            <div ref={chatContainerRef} className="mt-4 h-64 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.isAgent ? 'justify-start' : 'justify-end'}`}>
                   <div className={`rounded-xl px-4 py-2 text-sm max-w-[80%] ${msg.isAgent ? 'bg-white border border-gray-200 text-gray-800' : 'bg-purple-600 text-white'}`}>
@@ -158,9 +178,17 @@ export default function SupportPage() {
               <div className="rounded-xl bg-emerald-50 p-5 text-sm font-semibold text-emerald-800">Thanks. Your message is with our support team now.</div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
-                <input required aria-label="Your email" type="email" placeholder="Your email" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
-                <textarea required aria-label="How can we help" placeholder="How can we help?" rows={4} className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100" />
-                <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white transition hover:bg-purple-700"><Send size={17} /> Send message</button>
+                {errorMessage && (
+                  <div className="flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+                    <AlertCircle size={16} />
+                    {errorMessage}
+                  </div>
+                )}
+                <input required aria-label="Your email" type="email" placeholder="Your email" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 disabled:opacity-50" disabled={isSubmitting} />
+                <textarea required aria-label="How can we help" placeholder="How can we help?" rows={4} className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 disabled:opacity-50" disabled={isSubmitting} />
+                <button type="submit" disabled={isSubmitting} className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 font-bold text-white transition hover:bg-purple-700 disabled:bg-purple-400">
+                  <Send size={17} /> {isSubmitting ? 'Sending...' : 'Send message'}
+                </button>
               </form>
             )}
             <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-400"><ShieldCheck size={15} className="text-emerald-600" /> Your details stay private.</div>
