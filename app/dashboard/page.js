@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, MapPin, Package, Plus, User, FileText, ChevronRight, RotateCcw, LayoutDashboard } from 'lucide-react';
+import { LogOut, MapPin, Package, Plus, User, FileText, ChevronRight, RotateCcw, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import Header from '../../src/store/src/components/Header';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useCartStore } from '../../src/store/useCartStore';
@@ -97,6 +97,13 @@ export default function UserDashboard() {
               })}
               
               <div className="h-px bg-gray-100 my-2 mx-4"></div>
+              
+              <button 
+                onClick={() => router.push('/')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                <ShoppingCart size={18} className="text-emerald-600" /> Start Shopping
+              </button>
               
               <button 
                 onClick={handleLogout}
