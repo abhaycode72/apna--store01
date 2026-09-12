@@ -33,7 +33,7 @@ export default function Header() {
             <Headphones size={18} />
             <span>Customer Service</span>
           </button>
-          <button onClick={() => router.push('/checkout')} aria-label="Login" title="Login" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 transition hover:bg-purple-50">
+          <button onClick={() => router.push('/login')} aria-label="Login" title="Login" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 transition hover:bg-purple-50">
             <UserRound size={18} />
             <span>Login</span>
           </button>
