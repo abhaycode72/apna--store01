@@ -55,9 +55,9 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* App Header (Instamart Style) */}
-      <div className="bg-white px-4 pt-4 pb-3 shadow-sm sticky top-0 z-40">
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-8">
+      {/* App Header (Mobile Only) */}
+      <div className="md:hidden bg-white px-4 pt-4 pb-3 shadow-sm sticky top-0 z-40">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
@@ -93,13 +93,13 @@ export default function Home() {
         </label>
       </div>
 
-      <main className="px-4 py-4 space-y-6">
+      <main className="px-4 md:px-8 py-4 md:py-8 max-w-7xl mx-auto space-y-6 md:space-y-10">
         {searchQuery.trim() !== '' ? (
           /* Search Results */
           <div>
-            <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Search Results</h3>
+            <h3 className="font-bold text-gray-900 mb-4 text-sm md:text-lg uppercase tracking-wide">Search Results</h3>
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-6">
                 {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
               </div>
             ) : (
@@ -125,14 +125,14 @@ export default function Home() {
 
             {/* Circular Category Grid */}
             <section>
-              <h3 className="font-black text-gray-900 mb-3 text-lg">Shop by Category</h3>
-              <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+              <h3 className="font-black text-gray-900 mb-4 text-lg md:text-xl">Shop by Category</h3>
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-x-2 gap-y-6">
                 {categories.map((cat, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-1 cursor-pointer group">
-                    <div className={`w-16 h-16 rounded-full ${cat.color} flex items-center justify-center text-2xl shadow-sm border border-black/5 group-active:scale-95 transition-transform`}>
+                  <div key={idx} className="flex flex-col items-center gap-2 cursor-pointer group">
+                    <div className={`w-16 h-16 md:w-24 md:h-24 rounded-full ${cat.color} flex items-center justify-center text-2xl md:text-4xl shadow-sm border border-black/5 group-hover:-translate-y-1 group-active:scale-95 transition-all`}>
                       {cat.icon}
                     </div>
-                    <span className="text-[10px] font-bold text-center text-gray-700 leading-tight">{cat.name}</span>
+                    <span className="text-[10px] md:text-sm font-bold text-center text-gray-700 leading-tight group-hover:text-emerald-700 transition">{cat.name}</span>
                   </div>
                 ))}
               </div>
@@ -140,13 +140,13 @@ export default function Home() {
 
             {/* Horizontal Scroll Product Strip (Bestsellers) */}
             <section>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-black text-gray-900 text-lg">Bestsellers</h3>
-                <span className="text-emerald-600 text-xs font-bold">See All</span>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-black text-gray-900 text-lg md:text-2xl">Bestsellers</h3>
+                <span className="text-emerald-600 text-xs md:text-sm font-bold cursor-pointer hover:underline">See All</span>
               </div>
-              <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 no-scrollbar">
+              <div className="flex overflow-x-auto gap-3 md:gap-6 pb-4 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
                 {products.slice(0, 6).map((product) => (
-                  <div key={product.id} className="w-[140px] shrink-0">
+                  <div key={product.id} className="w-[140px] md:w-[220px] shrink-0">
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -155,12 +155,12 @@ export default function Home() {
             
             {/* Horizontal Scroll Product Strip (Dairy) */}
             <section>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-black text-gray-900 text-lg">Daily Needs</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-black text-gray-900 text-lg md:text-2xl">Daily Needs</h3>
               </div>
-              <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 no-scrollbar">
+              <div className="flex overflow-x-auto gap-3 md:gap-6 pb-4 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
                 {products.filter(p => p.category === 'Dairy & Breakfast').map((product) => (
-                  <div key={product.id} className="w-[140px] shrink-0">
+                  <div key={product.id} className="w-[140px] md:w-[220px] shrink-0">
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -170,9 +170,9 @@ export default function Home() {
         )}
       </main>
 
-      {/* Floating Bottom Cart (sits above BottomNav) */}
+      {/* Floating Bottom Cart (Mobile Only, Desktop uses Header) */}
       {mounted && cartCount > 0 && (
-        <div className="fixed bottom-[72px] left-0 right-0 z-50 px-4 animate-in slide-in-from-bottom-full duration-300 mx-auto max-w-md">
+        <div className="md:hidden fixed bottom-[72px] left-0 right-0 z-50 px-4 animate-in slide-in-from-bottom-full duration-300">
           <div 
             onClick={() => router.push('/checkout')}
             className="bg-emerald-600 rounded-2xl shadow-xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
