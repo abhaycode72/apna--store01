@@ -1,14 +1,20 @@
  'use client';
 import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useCartStore } from '../../useCartStore';
 import { useAuthStore } from '../../useAuthStore';
 
 export default function Header() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const items = useCartStore((state) => state.items);
   const user = useAuthStore((state) => state.user);
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
@@ -35,16 +41,18 @@ export default function Header() {
             <Headphones size={18} />
             <span>Customer Service</span>
           </button>
-          {user ? (
+          {mounted && user ? (
             <button onClick={() => router.push('/dashboard')} aria-label="Dashboard" title="Dashboard" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 bg-purple-50 transition hover:bg-purple-100">
               <UserRound size={18} />
               <span>Dashboard</span>
             </button>
-          ) : (
+          ) : mounted ? (
             <button onClick={() => router.push('/login')} aria-label="Login" title="Login" className="flex items-center gap-2 rounded-lg border border-purple-200 px-2 sm:px-3 py-2 text-sm font-bold text-purple-700 transition hover:bg-purple-50">
               <UserRound size={18} />
               <span>Login</span>
             </button>
+          ) : (
+            <div className="w-20 h-10 bg-gray-100 rounded-lg animate-pulse" />
           )}
           <button onClick={() => router.push('/admin')} aria-label="Admin dashboard" title="Admin dashboard" className="hidden rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 md:block">
             <ShieldCheck size={19} />

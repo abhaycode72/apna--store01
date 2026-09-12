@@ -13,15 +13,20 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('orders');
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Protect route
   useEffect(() => {
-    if (!user) {
+    if (mounted && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, mounted]);
 
-  if (!user) return null; // loading or redirecting
+  if (!mounted || !user) return <div className="min-h-screen bg-gray-50 flex items-center justify-center font-bold text-purple-600">Loading Dashboard...</div>;
 
   const handleAddAddress = (e) => {
     e.preventDefault();
