@@ -12,7 +12,7 @@ export default function ProductCard({ product }) {
       style={{ '--store-delay': `${(product.id - 1) * 35}ms` }}
     >
       <div className="absolute top-2 left-2 z-10">
-        <div className="text-[10px] font-black text-white bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-1 rounded-md shadow-sm">
+        <div className="text-[10px] font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 px-2 py-1 rounded-md shadow-sm">
           10 MINS
         </div>
       </div>
@@ -37,22 +37,22 @@ export default function ProductCard({ product }) {
         {quantity === 0 ? (
           <button 
             onClick={() => addToCart(product)}
-            className="border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold px-4 py-1.5 rounded-lg text-sm transition active:scale-95"
+            className="border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold px-3 py-1.5 rounded-lg text-sm transition active:scale-95"
           >
             ADD
           </button>
         ) : (
-          <div className="flex items-center bg-purple-600 text-white rounded-lg overflow-hidden shadow-sm h-8">
+          <div className="flex items-center bg-emerald-600 text-white rounded-lg overflow-hidden shadow-sm h-8">
             <button 
               onClick={() => decreaseQuantity(product.id)}
-              className="w-8 h-full flex items-center justify-center hover:bg-purple-700 transition active:bg-purple-800 font-bold text-lg"
+              className="w-8 h-full flex items-center justify-center hover:bg-emerald-700 transition active:bg-emerald-800 font-bold text-lg"
             >
               -
             </button>
             <span className="w-6 text-center font-bold text-sm">{quantity}</span>
             <button 
               onClick={() => addToCart(product)}
-              className="w-8 h-full flex items-center justify-center hover:bg-purple-700 transition active:bg-purple-800 font-bold text-lg"
+              className="w-8 h-full flex items-center justify-center hover:bg-emerald-700 transition active:bg-emerald-800 font-bold text-lg"
             >
               +
             </button>
