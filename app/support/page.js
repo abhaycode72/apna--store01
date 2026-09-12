@@ -77,18 +77,27 @@ export default function SupportPage() {
 
     setTimeout(() => {
       const lower = currentInput.toLowerCase();
-      let reply = "Thanks for reaching out! One of our support agents will look into this right away.";
+      let reply = "Thank you for sharing your concern. A human support executive will review this and reply to you in this chat within 2 minutes. Please keep your Order ID ready.";
       
-      if (lower.includes("order") || lower.includes("kab aayega") || lower.includes("track") || lower.includes("delivery") || lower.includes("late")) {
-        reply = "Please provide your Order ID (e.g., ORD-9021) and I will track its exact rider location for you.";
-      } else if (lower.includes("missing") || lower.includes("nahi mila") || lower.includes("wrong") || lower.includes("galat") || lower.includes("kharab")) {
-        reply = "I apologize for the inconvenience! Please share the Order ID. We will verify with the packing store and issue a refund or replacement immediately.";
-      } else if (lower.includes("cancel")) {
-        reply = "You can cancel your order directly from the 'My Orders' section before the packing begins. If it's already packed, it cannot be cancelled.";
-      } else if (lower.includes("refund") || lower.includes("paisa") || lower.includes("money") || lower.includes("payment")) {
-        reply = "Refunds are processed instantly from our side. However, it can take 3-5 business days for your bank to credit it to your original payment method.";
-      } else if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey") || lower.includes("namaste")) {
-        reply = "Hello there! How can I help you with your Apna Store delivery today?";
+      const isDamaged = ["kharab", "damaged", "tuta", "bekar", "expired", "bad", "rotten", "smell", "fata", "leak"].some(k => lower.includes(k));
+      const isMissing = ["missing", "nahi mila", "gayab", "forgot", "kam hai", "chhut"].some(k => lower.includes(k));
+      const isTracking = ["late", "kab aayega", "time", "track", "kaha hai", "where is", "order", "delivery"].some(k => lower.includes(k));
+      const isRefund = ["refund", "paisa", "money", "payment", "wapas", "return"].some(k => lower.includes(k));
+      const isCancel = ["cancel", "stop", "change order", "mistake", "galat order"].some(k => lower.includes(k));
+      const isGreeting = ["hi", "hello", "hey", "namaste", "help"].some(k => lower.includes(k));
+
+      if (isDamaged) {
+        reply = "I am very sorry to hear that the product is damaged or expired. Please provide your Order ID and send us a clear photo of the damaged product. Our team will verify it and issue a 100% refund or send a free replacement within 30 minutes!";
+      } else if (isMissing) {
+        reply = "I apologize for the missing item. Please share your Order ID and the name of the item you didn't receive. We will instantly check with the dark store and process a full refund for that item.";
+      } else if (isCancel) {
+        reply = "You can cancel your order directly from the 'My Orders' section in the app before the packing begins. If the order is already packed or out for delivery, it cannot be cancelled.";
+      } else if (isRefund) {
+        reply = "Refunds are initiated immediately from our end. Depending on your bank or UPI app, it may take anywhere from a few minutes to 3-5 business days to reflect in your account.";
+      } else if (isTracking) {
+        reply = "To check the exact location of your delivery rider, please provide your Order ID (e.g. ORD-9021). I will track the rider's GPS location and let you know immediately.";
+      } else if (isGreeting) {
+        reply = "Hello there! Welcome to Apna Store Support. How can I help you today? Are you facing issues with a recent order?";
       }
 
       setMessages(prev => [...prev, { text: reply, isAgent: true }]);
