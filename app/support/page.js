@@ -20,6 +20,7 @@ export default function SupportPage() {
     { text: "Hi! How can I help you today?", isAgent: true }
   ]);
   const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   const chatContainerRef = useRef(null);
 
@@ -65,6 +66,8 @@ export default function SupportPage() {
     setMessages(prev => [...prev, { text: currentInput, isAgent: false }]);
     setChatInput('');
 
+    setIsTyping(true);
+
     try {
       await fetch('/api/contact', {
         method: 'POST',
@@ -79,19 +82,25 @@ export default function SupportPage() {
       const lower = currentInput.toLowerCase();
       let reply = "Thank you for sharing your concern. A human support executive will review this and reply to you in this chat within 2 minutes. Please keep your Order ID ready.";
       
+      const orderIdMatch = currentInput.match(/ORD-\d+/i);
       const isDamaged = ["kharab", "damaged", "tuta", "bekar", "expired", "bad", "rotten", "smell", "fata", "leak"].some(k => lower.includes(k));
       const isMissing = ["missing", "nahi mila", "gayab", "forgot", "kam hai", "chhut"].some(k => lower.includes(k));
       const isTracking = ["late", "kab aayega", "time", "track", "kaha hai", "where is", "order", "delivery"].some(k => lower.includes(k));
-      const isRefund = ["refund", "paisa", "money", "payment", "wapas", "return"].some(k => lower.includes(k));
+      const isRefund = ["refund", "paisa", "money", "payment", "wapas", "return", "paise kat gaye"].some(k => lower.includes(k));
       const isCancel = ["cancel", "stop", "change order", "mistake", "galat order"].some(k => lower.includes(k));
+      const isAddress = ["address", "pata", "location", "wrong address"].some(k => lower.includes(k));
       const isGreeting = ["hi", "hello", "hey", "namaste", "help"].some(k => lower.includes(k));
 
-      if (isDamaged) {
-        reply = "I am very sorry to hear that the product is damaged or expired. Please provide your Order ID and send us a clear photo of the damaged product. Our team will verify it and issue a 100% refund or send a free replacement within 30 minutes!";
+      if (orderIdMatch) {
+        reply = `I have checked the details for order ${orderIdMatch[0].toUpperCase()}. Our team is working on it and will resolve your issue directly. Your refund or replacement will be initiated shortly!`;
+      } else if (isDamaged) {
+        reply = "I am very sorry to hear that the product is damaged or expired. Please provide your Order ID (e.g., ORD-9021) and send us a clear photo of the damaged product. Our team will verify it and issue a 100% refund or send a free replacement within 30 minutes!";
       } else if (isMissing) {
-        reply = "I apologize for the missing item. Please share your Order ID and the name of the item you didn't receive. We will instantly check with the dark store and process a full refund for that item.";
+        reply = "I apologize for the missing item. Please share your Order ID (e.g., ORD-9021) and the name of the item you didn't receive. We will instantly check with the dark store and process a full refund for that item.";
       } else if (isCancel) {
         reply = "You can cancel your order directly from the 'My Orders' section in the app before the packing begins. If the order is already packed or out for delivery, it cannot be cancelled.";
+      } else if (isAddress) {
+        reply = "We cannot change the delivery address once the order is placed to prevent delays. However, you can cancel the order if it's not packed yet, and place a new one with the correct address.";
       } else if (isRefund) {
         reply = "Refunds are initiated immediately from our end. Depending on your bank or UPI app, it may take anywhere from a few minutes to 3-5 business days to reflect in your account.";
       } else if (isTracking) {
@@ -100,8 +109,9 @@ export default function SupportPage() {
         reply = "Hello there! Welcome to Apna Store Support. How can I help you today? Are you facing issues with a recent order?";
       }
 
+      setIsTyping(false);
       setMessages(prev => [...prev, { text: reply, isAgent: true }]);
-    }, 1000);
+    }, 1500);
   };
 
   return (
@@ -160,6 +170,13 @@ export default function SupportPage() {
                   </div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm text-gray-500 italic">
+                    Agent is typing...
+                  </div>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleChatSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
