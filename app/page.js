@@ -166,6 +166,35 @@ export default function Home() {
                 ))}
               </div>
             </section>
+
+            {/* Dark Store Operations Footer Banner */}
+            <section className="mt-10 rounded-3xl bg-gradient-to-r from-slate-900 to-slate-950 p-6 text-white border border-slate-800 shadow-xl">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Sparkles size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-base text-white">Dark Store Operations Portal</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Live order fulfillment, dark store stock control & fleet rider management</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                  <button
+                    onClick={() => router.push('/manager')}
+                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs transition shadow-md shadow-emerald-700/20"
+                  >
+                    Launch Manager Panel →
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin')}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition border border-slate-700"
+                  >
+                    Super Admin
+                  </button>
+                </div>
+              </div>
+            </section>
           </>
         )}
       </main>

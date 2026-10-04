@@ -14,8 +14,8 @@ export default function BottomNav() {
   }, []);
 
   if (!mounted) return null;
-  // Hide on admin or login
-  if (pathname.startsWith('/admin') || pathname === '/login') return null;
+  // Hide on admin, manager, or login
+  if (pathname.startsWith('/admin') || pathname.startsWith('/manager') || pathname === '/login') return null;
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home, path: '/' },

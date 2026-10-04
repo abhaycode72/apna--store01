@@ -1,5 +1,5 @@
  'use client';
-import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound, LogOut, Package, User } from 'lucide-react';
+import { Headphones, Home, MapPin, ShieldCheck, ShoppingBag, UserRound, LogOut, Package, User, Store } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '../../useCartStore';
@@ -79,6 +79,10 @@ export default function Header() {
           ) : (
             <div className="w-20 h-10 bg-gray-100 rounded-lg animate-pulse" />
           )}
+          <button onClick={() => router.push('/manager')} aria-label="Store Manager panel" title="Store Manager panel" className="hidden rounded-lg border border-emerald-200 p-2 text-emerald-800 bg-emerald-50 transition hover:border-emerald-300 hover:bg-emerald-100 font-bold text-xs sm:flex items-center gap-1.5 shadow-sm">
+            <Store size={17} />
+            <span>Manager</span>
+          </button>
           <button onClick={() => router.push('/admin')} aria-label="Admin dashboard" title="Admin dashboard" className="hidden rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 md:block">
             <ShieldCheck size={19} />
           </button>

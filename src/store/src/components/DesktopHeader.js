@@ -12,7 +12,7 @@ export default function DesktopHeader() {
   const { user, logout } = useAuthStore();
   const { items } = useCartStore();
   
-  if (pathname.startsWith('/admin') || pathname === '/login') return null;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/manager') || pathname === '/login') return null;
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -59,9 +59,17 @@ export default function DesktopHeader() {
         </div>
 
         {/* Auth & Cart */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/manager"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 text-emerald-400 hover:bg-slate-800 rounded-xl text-xs font-black transition border border-slate-700 shadow-sm"
+            title="Dark Store Manager Panel"
+          >
+            <Sparkles size={14} className="text-emerald-400" /> Manager Panel
+          </Link>
+
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button onClick={() => router.push('/dashboard?tab=orders')} className="text-gray-600 hover:text-emerald-600 font-bold text-sm flex items-center gap-2 transition">
                 <Package size={20} /> Orders
               </button>
@@ -78,6 +86,7 @@ export default function DesktopHeader() {
                 {/* Dropdown menu */}
                 <div className="absolute right-0 top-12 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                   <button onClick={() => router.push('/dashboard?tab=profile')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-t-xl transition">My Dashboard</button>
+                  <Link href="/manager" className="block w-full text-left px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition">Manager Desk</Link>
                   <button onClick={() => { logout(); router.push('/'); }} className="w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-b-xl transition flex items-center gap-2">
                     <LogOut size={16} /> Logout
                   </button>
