@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -14,30 +14,28 @@ import {
   Bike,
   Plus,
   Search,
-  Filter,
   Volume2,
   VolumeX,
   Phone,
   MapPin,
-  Calendar,
   Layers,
   Sparkles,
-  ArrowUpRight,
   ExternalLink,
-  RefreshCw,
   LogOut,
   ChevronRight,
   Check,
   X,
   Printer,
-  ChevronDown,
   Store,
   Sliders,
   Thermometer,
-  ShieldCheck,
   User,
   Zap,
-  Info
+  Edit,
+  Edit2,
+  Trash2,
+  Save,
+  DollarSign
 } from 'lucide-react';
 
 export default function ManagerDashboard() {
@@ -65,9 +63,19 @@ export default function ManagerDashboard() {
 
   // Modals & Drawers
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [orderEditForm, setOrderEditForm] = useState(null);
+
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null); // When editing a product
+
   const [showAddRiderModal, setShowAddRiderModal] = useState(false);
+  const [editingRider, setEditingRider] = useState(null); // When editing a rider
+
+  const [showEditHubModal, setShowEditHubModal] = useState(false);
+  const [hubEditForm, setHubEditForm] = useState(null);
+
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [lastNotification, setLastNotification] = useState(null);
 
@@ -118,9 +126,8 @@ export default function ManagerDashboard() {
       const gain = ctx.createGain();
       osc.type = 'sine';
       
-      // Cheerful double chime
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
       
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
@@ -198,7 +205,7 @@ export default function ManagerDashboard() {
     router.push('/manager/login');
   };
 
-  // Order Actions
+  // ---------------- ORDER ACTIONS & EDITING ----------------
   const updateOrderStatus = async (orderId, newStatus, assignedRider = null) => {
     const updates = { status: newStatus };
     if (assignedRider) updates.assignedRider = assignedRider;
@@ -217,7 +224,7 @@ export default function ManagerDashboard() {
           setSelectedOrder((prev) => ({ ...prev, ...updates }));
         }
         playChime();
-        setLastNotification(`Order ${orderId} moved to ${newStatus.replace(/_/g, ' ')}`);
+        setLastNotification(`Order ${orderId} status updated to ${newStatus.replace(/_/g, ' ')}`);
         setTimeout(() => setLastNotification(null), 4000);
       }
     } catch (err) {
@@ -225,10 +232,8 @@ export default function ManagerDashboard() {
     }
   };
 
-  // Assign Rider
   const handleAssignRider = async (orderId, riderName) => {
     await updateOrderStatus(orderId, 'OUT_FOR_DELIVERY', riderName);
-    // Also update rider activeOrderId in local fleet
     setRiders((prev) =>
       prev.map((r) =>
         r.name === riderName
@@ -240,7 +245,62 @@ export default function ManagerDashboard() {
     );
   };
 
-  // Simulate Incoming Order (For quick interactive demonstration)
+  // Start Editing Order
+  const handleStartEditOrder = (order) => {
+    setOrderEditForm({
+      customerName: order.customer?.name || '',
+      customerMobile: order.customer?.mobile || '',
+      customerAddress: order.customer?.address || '',
+      customerLocation: order.customer?.location || '',
+      status: order.status || 'ORDER_PLACED',
+      paymentMethod: order.paymentMethod || 'upi',
+      paymentStatus: order.paymentStatus || 'PAID',
+      notes: order.notes || '',
+      assignedRider: order.assignedRider || '',
+    });
+    setIsEditingOrder(true);
+  };
+
+  // Save Edited Order
+  const handleSaveOrderEdit = async (e) => {
+    e.preventDefault();
+    if (!selectedOrder || !orderEditForm) return;
+
+    const updates = {
+      customer: {
+        name: orderEditForm.customerName,
+        mobile: orderEditForm.customerMobile,
+        address: orderEditForm.customerAddress,
+        location: orderEditForm.customerLocation,
+      },
+      status: orderEditForm.status,
+      paymentMethod: orderEditForm.paymentMethod,
+      paymentStatus: orderEditForm.paymentStatus,
+      notes: orderEditForm.notes,
+      assignedRider: orderEditForm.assignedRider || null,
+    };
+
+    try {
+      const res = await fetch('/api/manager/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: selectedOrder.id, updates }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders((prev) => prev.map((ord) => (ord.id === selectedOrder.id ? { ...ord, ...updates } : ord)));
+        setSelectedOrder((prev) => ({ ...prev, ...updates }));
+        setIsEditingOrder(false);
+        playChime();
+        setLastNotification(`✅ Order ${selectedOrder.id} successfully updated!`);
+        setTimeout(() => setLastNotification(null), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to save order updates:', err);
+    }
+  };
+
+  // Simulate Incoming Order
   const handleSimulateNewOrder = async () => {
     const sampleCustomers = [
       { name: 'Neha Chaurasia', mobile: '9822334455', address: 'B-14, Doctors Colony, Kankarbagh', location: 'Kankarbagh, Patna' },
@@ -283,7 +343,7 @@ export default function ManagerDashboard() {
     }
   };
 
-  // Inventory Stock Adjustment
+  // ---------------- INVENTORY EDITING ----------------
   const handleStockAdjust = async (id, delta) => {
     const item = inventory.find((p) => p.id === id);
     if (!item) return;
@@ -306,7 +366,6 @@ export default function ManagerDashboard() {
     }
   };
 
-  // Toggle Inventory Availability
   const handleToggleProductAvailability = async (id) => {
     const item = inventory.find((p) => p.id === id);
     if (!item) return;
@@ -330,98 +389,58 @@ export default function ManagerDashboard() {
     }
   };
 
-  // Toggle Store Open / Paused
-  const handleToggleStoreStatus = async () => {
-    if (!storeStatus) return;
-    const nextStatus = !storeStatus.isOpen;
-    try {
-      const res = await fetch('/api/manager/store-status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isOpen: nextStatus }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setStoreStatus((prev) => ({ ...prev, isOpen: nextStatus }));
-        setLastNotification(nextStatus ? '🟢 Store is now OPEN & accepting orders' : '🔴 Store is now PAUSED');
-        setTimeout(() => setLastNotification(null), 4000);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+  // Open Edit Product Modal
+  const handleOpenEditProduct = (product) => {
+    setEditingProduct({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      weight: product.weight,
+      price: product.price,
+      mrp: product.mrp || product.price,
+      stock: product.stock,
+      minThreshold: product.minThreshold,
+      shelfLocation: product.shelfLocation || '',
+      image: product.image || '',
+    });
   };
 
-  // Toggle Speed Mode
-  const handleToggleSpeedMode = async (mode) => {
-    try {
-      const res = await fetch('/api/manager/store-status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ speedMode: mode }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setStoreStatus((prev) => ({ ...prev, speedMode: mode }));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Toggle Rider Status
-  const handleRiderStatusChange = async (riderId, newStatus) => {
-    try {
-      const res = await fetch('/api/manager/riders', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: riderId, updates: { status: newStatus } }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setRiders((prev) => prev.map((r) => (r.id === riderId ? { ...r, status: newStatus } : r)));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Create Manual Order
-  const handleCreateManualOrder = async (e) => {
+  // Save Product Updates
+  const handleSaveProductEdit = async (e) => {
     e.preventDefault();
-    if (!newOrderForm.customerName || !newOrderForm.customerMobile) return;
+    if (!editingProduct) return;
 
-    const total = newOrderForm.selectedItems.reduce((acc, i) => acc + i.price * i.quantity, 0) + 15;
-    const payload = {
-      customer: {
-        name: newOrderForm.customerName,
-        mobile: newOrderForm.customerMobile,
-        address: newOrderForm.customerAddress || 'Direct Store Counter Pickup',
-        location: newOrderForm.customerLocation,
-      },
-      items: newOrderForm.selectedItems,
-      paymentMethod: newOrderForm.paymentMethod,
-      paymentStatus: newOrderForm.paymentMethod === 'cod' ? 'PENDING_COLLECTION' : 'PAID',
-      total,
-      status: 'ORDER_PLACED',
-      notes: newOrderForm.notes,
+    const updates = {
+      name: editingProduct.name,
+      category: editingProduct.category,
+      weight: editingProduct.weight,
+      price: Number(editingProduct.price),
+      mrp: Number(editingProduct.mrp),
+      stock: Number(editingProduct.stock),
+      minThreshold: Number(editingProduct.minThreshold),
+      shelfLocation: editingProduct.shelfLocation,
+      image: editingProduct.image,
+      isAvailable: Number(editingProduct.stock) > 0,
     };
 
     try {
-      const res = await fetch('/api/manager/orders', {
-        method: 'POST',
+      const res = await fetch('/api/manager/inventory', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ id: editingProduct.id, updates }),
       });
       const data = await res.json();
       if (data.success) {
-        setOrders((prev) => [data.order, ...prev]);
-        setShowNewOrderModal(false);
+        setInventory((prev) =>
+          prev.map((item) => (item.id === editingProduct.id ? { ...item, ...updates } : item))
+        );
+        setEditingProduct(null);
         playChime();
-        setLastNotification(`✅ Order ${data.order.id} registered successfully!`);
+        setLastNotification(`✅ SKU "${updates.name}" updated successfully!`);
         setTimeout(() => setLastNotification(null), 4000);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to update product:', err);
     }
   };
 
@@ -459,13 +478,65 @@ export default function ManagerDashboard() {
           shelfLocation: 'Aisle A-01',
           image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=640&q=85',
         });
+        playChime();
+        setLastNotification(`✅ New SKU "${data.item.name}" added to inventory!`);
+        setTimeout(() => setLastNotification(null), 4000);
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Add Rider Submit
+  // ---------------- RIDER FLEET EDITING ----------------
+  const handleRiderStatusChange = async (riderId, newStatus) => {
+    try {
+      const res = await fetch('/api/manager/riders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: riderId, updates: { status: newStatus } }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRiders((prev) => prev.map((r) => (r.id === riderId ? { ...r, status: newStatus } : r)));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleOpenEditRider = (rider) => {
+    setEditingRider({
+      id: rider.id,
+      name: rider.name,
+      phone: rider.phone,
+      vehicle: rider.vehicle,
+      status: rider.status,
+    });
+  };
+
+  const handleSaveRiderEdit = async (e) => {
+    e.preventDefault();
+    if (!editingRider) return;
+
+    try {
+      const res = await fetch('/api/manager/riders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingRider.id, updates: editingRider }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRiders((prev) => prev.map((r) => (r.id === editingRider.id ? { ...r, ...editingRider } : r)));
+        setEditingRider(null);
+        playChime();
+        setLastNotification(`✅ Rider "${editingRider.name}" details updated!`);
+        setTimeout(() => setLastNotification(null), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to update rider:', err);
+    }
+  };
+
   const handleAddRiderSubmit = async (e) => {
     e.preventDefault();
     if (!newRiderForm.name || !newRiderForm.phone) return;
@@ -486,6 +557,136 @@ export default function ManagerDashboard() {
           vehicle: 'Hero Splendor (BR-01-XX-0000)',
           status: 'AVAILABLE',
         });
+        playChime();
+        setLastNotification(`✅ Rider "${data.rider.name}" registered successfully!`);
+        setTimeout(() => setLastNotification(null), 4000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ---------------- HUB OPERATIONS EDITING ----------------
+  const handleToggleStoreStatus = async () => {
+    if (!storeStatus) return;
+    const nextStatus = !storeStatus.isOpen;
+    try {
+      const res = await fetch('/api/manager/store-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen: nextStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStoreStatus((prev) => ({ ...prev, isOpen: nextStatus }));
+        setLastNotification(nextStatus ? '🟢 Store is now OPEN & accepting orders' : '🔴 Store is now PAUSED');
+        setTimeout(() => setLastNotification(null), 4000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleSpeedMode = async (mode) => {
+    try {
+      const res = await fetch('/api/manager/store-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ speedMode: mode }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStoreStatus((prev) => ({ ...prev, speedMode: mode }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleOpenEditHub = () => {
+    if (!storeStatus) return;
+    setHubEditForm({
+      storeName: storeStatus.storeName || '',
+      location: storeStatus.location || '',
+      activePackingBays: storeStatus.activePackingBays || 3,
+      coldRoomTemp: storeStatus.coldRoomTemp || '3.6°C',
+      managerName: storeStatus.manager?.name || manager?.name || 'Vikash Kumar',
+      shift: storeStatus.manager?.shift || 'Evening Rush (4:00 PM - 12:00 AM)',
+      announcement: storeStatus.announcement || '',
+    });
+    setShowEditHubModal(true);
+  };
+
+  const handleSaveHubEdit = async (e) => {
+    e.preventDefault();
+    if (!hubEditForm) return;
+
+    const updates = {
+      storeName: hubEditForm.storeName,
+      location: hubEditForm.location,
+      activePackingBays: Number(hubEditForm.activePackingBays),
+      coldRoomTemp: hubEditForm.coldRoomTemp,
+      announcement: hubEditForm.announcement,
+      manager: {
+        ...storeStatus.manager,
+        name: hubEditForm.managerName,
+        shift: hubEditForm.shift,
+      },
+    };
+
+    try {
+      const res = await fetch('/api/manager/store-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStoreStatus((prev) => ({ ...prev, ...updates }));
+        setShowEditHubModal(false);
+        playChime();
+        setLastNotification('✅ Store Hub settings updated successfully!');
+        setTimeout(() => setLastNotification(null), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to update hub settings:', err);
+    }
+  };
+
+  // Create Manual Order
+  const handleCreateManualOrder = async (e) => {
+    e.preventDefault();
+    if (!newOrderForm.customerName || !newOrderForm.customerMobile) return;
+
+    const total = newOrderForm.selectedItems.reduce((acc, i) => acc + i.price * i.quantity, 0) + 15;
+    const payload = {
+      customer: {
+        name: newOrderForm.customerName,
+        mobile: newOrderForm.customerMobile,
+        address: newOrderForm.customerAddress || 'Direct Store Counter Pickup',
+        location: newOrderForm.customerLocation,
+      },
+      items: newOrderForm.selectedItems,
+      paymentMethod: newOrderForm.paymentMethod,
+      paymentStatus: newOrderForm.paymentMethod === 'cod' ? 'PENDING_COLLECTION' : 'PAID',
+      total,
+      status: 'ORDER_PLACED',
+      notes: newOrderForm.notes,
+    };
+
+    try {
+      const res = await fetch('/api/manager/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders((prev) => [data.order, ...prev]);
+        setShowNewOrderModal(false);
+        playChime();
+        setLastNotification(`✅ Order ${data.order.id} registered successfully!`);
+        setTimeout(() => setLastNotification(null), 4000);
       }
     } catch (err) {
       console.error(err);
@@ -583,9 +784,8 @@ export default function ManagerDashboard() {
             </div>
           </div>
 
-          {/* Quick Operation Toggles (Desktop) */}
+          {/* Quick Operation Toggles */}
           <div className="hidden lg:flex items-center gap-3">
-            {/* Speed mode badge */}
             <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
               <button
                 onClick={() => handleToggleSpeedMode('EXPRESS_10M')}
@@ -630,7 +830,6 @@ export default function ManagerDashboard() {
 
           {/* Right Header Controls */}
           <div className="flex items-center gap-2.5">
-            {/* Simulate Order Button (Demo & testing) */}
             <button
               onClick={handleSimulateNewOrder}
               className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-700/20 active:scale-95 transition-all"
@@ -638,7 +837,6 @@ export default function ManagerDashboard() {
               <Sparkles size={14} /> + Live Order
             </button>
 
-            {/* Storefront Link */}
             <Link
               href="/"
               target="_blank"
@@ -648,7 +846,6 @@ export default function ManagerDashboard() {
               <ExternalLink size={18} />
             </Link>
 
-            {/* Manager Profile Menu */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
               <div className="w-9 h-9 rounded-xl bg-slate-800 text-emerald-400 flex items-center justify-center font-bold text-sm border border-slate-700">
                 {manager.name.charAt(0)}
@@ -830,6 +1027,14 @@ export default function ManagerDashboard() {
                 <Plus size={15} /> Register New Rider
               </button>
             )}
+            {activeTab === 'operations' && (
+              <button
+                onClick={handleOpenEditHub}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs rounded-xl transition"
+              >
+                <Edit size={14} /> Edit Hub Details
+              </button>
+            )}
           </div>
 
         </div>
@@ -844,8 +1049,6 @@ export default function ManagerDashboard() {
             
             {/* Filter & Search Bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-800">
-              
-              {/* Order Status Filters */}
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
                 {[
                   { id: 'ALL', label: 'All Orders', count: orders.length },
@@ -872,7 +1075,6 @@ export default function ManagerDashboard() {
                 ))}
               </div>
 
-              {/* Search input */}
               <div className="relative min-w-[240px]">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
@@ -883,7 +1085,6 @@ export default function ManagerDashboard() {
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                 />
               </div>
-
             </div>
 
             {/* Orders Feed */}
@@ -923,7 +1124,6 @@ export default function ManagerDashboard() {
                           : 'border-slate-800'
                       }`}
                     >
-                      {/* Top Header of Card */}
                       <div>
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div>
@@ -1034,7 +1234,7 @@ export default function ManagerDashboard() {
                         </div>
                       </div>
 
-                      {/* Bottom Pipeline Progress Buttons */}
+                      {/* Bottom Pipeline Progress & Edit Button */}
                       <div className="pt-3 border-t border-slate-800 flex items-center gap-2">
                         {isNew && (
                           <button
@@ -1078,11 +1278,26 @@ export default function ManagerDashboard() {
                           </span>
                         )}
 
+                        {/* Edit Order Quick Button */}
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            handleStartEditOrder(order);
+                          }}
+                          className="p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl transition border border-slate-700"
+                          title="Edit Order Details"
+                        >
+                          <Edit size={16} />
+                        </button>
+
                         {/* View Drawer Button */}
                         <button
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsEditingOrder(false);
+                          }}
                           className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition"
-                          title="View Full Order Details"
+                          title="View Order Details"
                         >
                           <ChevronRight size={16} />
                         </button>
@@ -1103,8 +1318,6 @@ export default function ManagerDashboard() {
             
             {/* Inventory Controls */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-800">
-              
-              {/* Category Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
                 {categories.map((cat) => (
                   <button
@@ -1121,7 +1334,6 @@ export default function ManagerDashboard() {
                 ))}
               </div>
 
-              {/* Search */}
               <div className="relative min-w-[240px]">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
@@ -1132,10 +1344,9 @@ export default function ManagerDashboard() {
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                 />
               </div>
-
             </div>
 
-            {/* Inventory Table */}
+            {/* Inventory Table with Edit Buttons */}
             <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -1147,7 +1358,7 @@ export default function ManagerDashboard() {
                       <th className="px-5 py-4">Price / MRP</th>
                       <th className="px-5 py-4">Stock Level</th>
                       <th className="px-5 py-4">Quick Adjust</th>
-                      <th className="px-5 py-4 text-right">Status</th>
+                      <th className="px-5 py-4 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
@@ -1205,12 +1416,14 @@ export default function ManagerDashboard() {
                               <button
                                 onClick={() => handleStockAdjust(item.id, -1)}
                                 className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg flex items-center justify-center font-black active:scale-95 transition"
+                                title="Reduce stock by 1"
                               >
                                 -
                               </button>
                               <button
                                 onClick={() => handleStockAdjust(item.id, 1)}
                                 className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg flex items-center justify-center font-black active:scale-95 transition"
+                                title="Increase stock by 1"
                               >
                                 +
                               </button>
@@ -1224,17 +1437,28 @@ export default function ManagerDashboard() {
                             </div>
                           </td>
 
-                          <td className="px-5 py-3.5 text-right">
-                            <button
-                              onClick={() => handleToggleProductAvailability(item.id)}
-                              className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition ${
-                                item.isAvailable
-                                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
-                                  : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/30'
-                              }`}
-                            >
-                              {item.isAvailable ? 'In Stock' : 'Out of Stock'}
-                            </button>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center justify-center gap-2">
+                              {/* EDIT BUTTON */}
+                              <button
+                                onClick={() => handleOpenEditProduct(item)}
+                                className="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                                title="Edit this product"
+                              >
+                                <Edit size={13} /> Edit
+                              </button>
+
+                              <button
+                                onClick={() => handleToggleProductAvailability(item.id)}
+                                className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition ${
+                                  item.isAvailable
+                                    ? 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                                    : 'bg-rose-500/20 text-rose-400'
+                                }`}
+                              >
+                                {item.isAvailable ? 'In Stock' : 'Out'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1255,7 +1479,7 @@ export default function ManagerDashboard() {
               <div>
                 <h3 className="font-black text-sm text-white">Store Delivery Fleet</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Track rider status, active deliveries, and manage availability in Patna Central zone.
+                  Track rider status, edit details, active deliveries, and manage availability in Patna Central zone.
                 </p>
               </div>
               <button
@@ -1284,7 +1508,16 @@ export default function ManagerDashboard() {
                             {rider.name.charAt(0)}
                           </div>
                           <div>
-                            <h4 className="font-bold text-slate-200 text-sm">{rider.name}</h4>
+                            <h4 className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
+                              {rider.name}
+                              <button
+                                onClick={() => handleOpenEditRider(rider)}
+                                className="text-slate-400 hover:text-emerald-400 transition"
+                                title="Edit Rider details"
+                              >
+                                <Edit size={13} />
+                              </button>
+                            </h4>
                             <p className="text-[11px] text-slate-400 flex items-center gap-1">
                               <Phone size={11} className="text-emerald-400" /> {rider.phone}
                             </p>
@@ -1328,37 +1561,46 @@ export default function ManagerDashboard() {
                       </div>
                     </div>
 
-                    {/* Status Toggle Actions */}
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px] font-bold">
+                    {/* Status Toggle Actions & Edit */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <div className="grid grid-cols-3 gap-2 text-[11px] font-bold">
+                        <button
+                          onClick={() => handleRiderStatusChange(rider.id, 'AVAILABLE')}
+                          className={`py-1.5 rounded-xl transition ${
+                            isAvailable
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:text-emerald-400'
+                          }`}
+                        >
+                          Idle / Ready
+                        </button>
+                        <button
+                          onClick={() => handleRiderStatusChange(rider.id, 'ON_BREAK')}
+                          className={`py-1.5 rounded-xl transition ${
+                            isOnBreak
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:text-amber-400'
+                          }`}
+                        >
+                          On Break
+                        </button>
+                        <button
+                          onClick={() => handleRiderStatusChange(rider.id, 'OFFLINE')}
+                          className={`py-1.5 rounded-xl transition ${
+                            rider.status === 'OFFLINE'
+                              ? 'bg-rose-600 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:text-rose-400'
+                          }`}
+                        >
+                          Offline
+                        </button>
+                      </div>
+
                       <button
-                        onClick={() => handleRiderStatusChange(rider.id, 'AVAILABLE')}
-                        className={`py-1.5 rounded-xl transition ${
-                          isAvailable
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-slate-800 text-slate-400 hover:text-emerald-400'
-                        }`}
+                        onClick={() => handleOpenEditRider(rider)}
+                        className="w-full py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-800"
                       >
-                        Idle / Ready
-                      </button>
-                      <button
-                        onClick={() => handleRiderStatusChange(rider.id, 'ON_BREAK')}
-                        className={`py-1.5 rounded-xl transition ${
-                          isOnBreak
-                            ? 'bg-amber-600 text-white'
-                            : 'bg-slate-800 text-slate-400 hover:text-amber-400'
-                        }`}
-                      >
-                        On Break
-                      </button>
-                      <button
-                        onClick={() => handleRiderStatusChange(rider.id, 'OFFLINE')}
-                        className={`py-1.5 rounded-xl transition ${
-                          rider.status === 'OFFLINE'
-                            ? 'bg-rose-600 text-white'
-                            : 'bg-slate-800 text-slate-400 hover:text-rose-400'
-                        }`}
-                      >
-                        Offline
+                        <Edit size={13} /> Edit Rider Info
                       </button>
                     </div>
 
@@ -1374,7 +1616,6 @@ export default function ManagerDashboard() {
         {activeTab === 'operations' && (
           <div className="space-y-6">
             
-            {/* Store Operational Card */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
@@ -1387,7 +1628,12 @@ export default function ManagerDashboard() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-400">Store Order Acceptance:</span>
+                  <button
+                    onClick={handleOpenEditHub}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition"
+                  >
+                    <Edit size={14} /> Edit Hub Details
+                  </button>
                   <button
                     onClick={handleToggleStoreStatus}
                     className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all shadow-md flex items-center gap-2 ${
@@ -1404,7 +1650,6 @@ export default function ManagerDashboard() {
               {/* Operational Controls Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
                 
-                {/* Packing Bays */}
                 <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                     <Layers size={14} className="text-emerald-400" /> Active Packing Stations
@@ -1412,7 +1657,7 @@ export default function ManagerDashboard() {
                   <div className="flex items-center justify-between mt-3">
                     <p className="text-3xl font-black text-white">{storeStatus?.activePackingBays || 3} Bays</p>
                     <span className="text-xs font-semibold px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                      100% Operational
+                      Operational
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-2">
@@ -1420,7 +1665,6 @@ export default function ManagerDashboard() {
                   </p>
                 </div>
 
-                {/* Cold Chain Health */}
                 <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                     <Thermometer size={14} className="text-blue-400" /> Cold Storage Sensors
@@ -1436,14 +1680,13 @@ export default function ManagerDashboard() {
                   </p>
                 </div>
 
-                {/* Manager on Shift */}
                 <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                     <User size={14} className="text-amber-400" /> Manager on Duty
                   </h4>
                   <div className="mt-3">
-                    <p className="text-base font-bold text-slate-200">{manager?.name}</p>
-                    <p className="text-xs text-emerald-400 font-mono mt-0.5">{manager?.badgeId} • {manager?.shift}</p>
+                    <p className="text-base font-bold text-slate-200">{storeStatus?.manager?.name || manager?.name}</p>
+                    <p className="text-xs text-emerald-400 font-mono mt-0.5">{manager?.badgeId} • {storeStatus?.manager?.shift || manager?.shift}</p>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-2">
                     Contact: {manager?.email}
@@ -1468,6 +1711,12 @@ export default function ManagerDashboard() {
                     onClick={() => {
                       const input = document.getElementById('announcementInput');
                       if (input) {
+                        fetch('/api/manager/store-status', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ announcement: input.value }),
+                        });
+                        setStoreStatus((prev) => ({ ...prev, announcement: input.value }));
                         setLastNotification(`📢 Broadcast updated: "${input.value}"`);
                         setTimeout(() => setLastNotification(null), 4000);
                       }
@@ -1486,7 +1735,7 @@ export default function ManagerDashboard() {
 
       </main>
 
-      {/* 5. ORDER DETAIL DRAWER / MODAL */}
+      {/* 5. ORDER DETAIL DRAWER & EDIT ORDER FORM */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
           <div className="w-full sm:max-w-lg bg-slate-900 border-l sm:border border-slate-800 sm:rounded-3xl h-full max-h-screen overflow-y-auto p-6 shadow-2xl flex flex-col justify-between">
@@ -1505,107 +1754,622 @@ export default function ManagerDashboard() {
                     Placed on {new Date(selectedOrder.createdAt).toLocaleString()}
                   </p>
                 </div>
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800 transition"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (!isEditingOrder) {
+                        handleStartEditOrder(selectedOrder);
+                      } else {
+                        setIsEditingOrder(false);
+                      }
+                    }}
+                    className="p-2 text-emerald-400 hover:bg-slate-800 rounded-xl transition flex items-center gap-1 text-xs font-bold border border-slate-700"
+                    title={isEditingOrder ? 'Cancel Edit' : 'Edit Order'}
+                  >
+                    <Edit size={15} />
+                    <span>{isEditingOrder ? 'Cancel' : 'Edit'}</span>
+                  </button>
 
-              {/* Customer Details */}
-              <div className="py-4 border-b border-slate-800 space-y-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Customer & Delivery</p>
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-xs space-y-1.5">
-                  <p className="font-bold text-slate-200 text-sm">{selectedOrder.customer?.name}</p>
-                  <p className="text-emerald-400 font-mono font-semibold flex items-center gap-1">
-                    <Phone size={13} /> {selectedOrder.customer?.mobile}
-                  </p>
-                  <p className="text-slate-300 flex items-start gap-1">
-                    <MapPin size={13} className="text-slate-500 shrink-0 mt-0.5" />
-                    <span>{selectedOrder.customer?.address}</span>
-                  </p>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    Zone: {selectedOrder.customer?.location}
-                  </p>
+                  <button
+                    onClick={() => {
+                      setSelectedOrder(null);
+                      setIsEditingOrder(false);
+                    }}
+                    className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800 transition"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
               </div>
 
-              {/* Items List */}
-              <div className="py-4 border-b border-slate-800 space-y-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Itemized Manifest ({selectedOrder.items?.length || 0})
-                </p>
-                <div className="space-y-2">
-                  {selectedOrder.items?.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800/80 text-xs"
-                    >
-                      <div>
-                        <p className="font-bold text-slate-200">
-                          <span className="text-emerald-400 font-mono mr-1.5">{item.quantity}x</span>
-                          {item.name}
-                        </p>
-                        <p className="text-[10px] text-slate-500">{item.weight}</p>
-                      </div>
-                      <span className="font-mono font-bold text-white">₹{item.price * item.quantity}</span>
+              {/* View Mode OR Edit Mode */}
+              {!isEditingOrder ? (
+                <>
+                  {/* Customer Details */}
+                  <div className="py-4 border-b border-slate-800 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Customer & Delivery</p>
+                      <button
+                        onClick={() => handleStartEditOrder(selectedOrder)}
+                        className="text-xs text-emerald-400 font-bold hover:underline flex items-center gap-1"
+                      >
+                        <Edit2 size={12} /> Edit Details
+                      </button>
                     </div>
-                  ))}
-                </div>
+                    <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-xs space-y-1.5">
+                      <p className="font-bold text-slate-200 text-sm">{selectedOrder.customer?.name}</p>
+                      <p className="text-emerald-400 font-mono font-semibold flex items-center gap-1">
+                        <Phone size={13} /> {selectedOrder.customer?.mobile}
+                      </p>
+                      <p className="text-slate-300 flex items-start gap-1">
+                        <MapPin size={13} className="text-slate-500 shrink-0 mt-0.5" />
+                        <span>{selectedOrder.customer?.address}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Zone: {selectedOrder.customer?.location}
+                      </p>
+                    </div>
+                  </div>
 
-                <div className="pt-3 flex justify-between items-center text-sm font-black text-white px-1">
-                  <span>Grand Total</span>
-                  <span className="text-emerald-400">₹{selectedOrder.total}</span>
-                </div>
-              </div>
+                  {/* Payment & Assigned Rider */}
+                  <div className="py-3 border-b border-slate-800 grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 text-[11px] block">Payment:</span>
+                      <p className="font-bold text-slate-200 mt-0.5 uppercase">{selectedOrder.paymentMethod} ({selectedOrder.paymentStatus})</p>
+                    </div>
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 text-[11px] block">Rider:</span>
+                      <p className="font-bold text-emerald-400 mt-0.5">{selectedOrder.assignedRider || 'Not Assigned'}</p>
+                    </div>
+                  </div>
 
-              {/* Notes */}
-              {selectedOrder.notes && (
-                <div className="py-4 border-b border-slate-800">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Manager Notes</p>
-                  <p className="text-xs text-slate-300 italic bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    "{selectedOrder.notes}"
-                  </p>
-                </div>
+                  {/* Items List */}
+                  <div className="py-4 border-b border-slate-800 space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Itemized Manifest ({selectedOrder.items?.length || 0})
+                    </p>
+                    <div className="space-y-2">
+                      {selectedOrder.items?.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800/80 text-xs"
+                        >
+                          <div>
+                            <p className="font-bold text-slate-200">
+                              <span className="text-emerald-400 font-mono mr-1.5">{item.quantity}x</span>
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] text-slate-500">{item.weight}</p>
+                          </div>
+                          <span className="font-mono font-bold text-white">₹{item.price * item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-3 flex justify-between items-center text-sm font-black text-white px-1">
+                      <span>Grand Total</span>
+                      <span className="text-emerald-400">₹{selectedOrder.total}</span>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {selectedOrder.notes && (
+                    <div className="py-4 border-b border-slate-800">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Manager Notes</p>
+                      <p className="text-xs text-slate-300 italic bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        "{selectedOrder.notes}"
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* EDIT FORM INSIDE DRAWER */
+                <form onSubmit={handleSaveOrderEdit} className="py-4 space-y-3.5 text-xs">
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl text-emerald-300 font-bold flex items-center gap-2">
+                    <Edit size={14} /> Editing Order #{selectedOrder.id}
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Customer Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={orderEditForm.customerName}
+                      onChange={(e) => setOrderEditForm({ ...orderEditForm, customerName: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Mobile Phone</label>
+                      <input
+                        type="tel"
+                        required
+                        value={orderEditForm.customerMobile}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, customerMobile: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Zone / Location</label>
+                      <input
+                        type="text"
+                        value={orderEditForm.customerLocation}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, customerLocation: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Delivery Address</label>
+                    <textarea
+                      rows={2}
+                      value={orderEditForm.customerAddress}
+                      onChange={(e) => setOrderEditForm({ ...orderEditForm, customerAddress: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Order Status</label>
+                      <select
+                        value={orderEditForm.status}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, status: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="ORDER_PLACED">ORDER PLACED (New)</option>
+                        <option value="PACKING">PACKING</option>
+                        <option value="OUT_FOR_DELIVERY">OUT FOR DELIVERY</option>
+                        <option value="DELIVERED">DELIVERED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Assigned Rider</label>
+                      <select
+                        value={orderEditForm.assignedRider}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, assignedRider: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="">No Rider Assigned</option>
+                        {riders.map((r) => (
+                          <option key={r.id} value={r.name}>{r.name} ({r.status})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Payment Method</label>
+                      <select
+                        value={orderEditForm.paymentMethod}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, paymentMethod: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="upi">UPI / Online</option>
+                        <option value="cod">Cash on Delivery (COD)</option>
+                        <option value="card">Card Payment</option>
+                        <option value="cash">Counter Cash</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Payment Status</label>
+                      <select
+                        value={orderEditForm.paymentStatus}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, paymentStatus: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="PAID">PAID</option>
+                        <option value="PENDING_COLLECTION">PENDING COLLECTION</option>
+                        <option value="REFUNDED">REFUNDED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Instructions / Notes</label>
+                    <input
+                      type="text"
+                      value={orderEditForm.notes}
+                      onChange={(e) => setOrderEditForm({ ...orderEditForm, notes: e.target.value })}
+                      placeholder="e.g. Call before reaching"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/20"
+                    >
+                      <Save size={15} /> Save Order Changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingOrder(false)}
+                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
 
-            {/* Actions */}
-            <div className="pt-4 space-y-2">
-              <div className="grid grid-cols-2 gap-2">
+            {/* Bottom Actions */}
+            {!isEditingOrder && (
+              <div className="pt-4 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Printer size={15} /> Print Packing KOT
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateOrderStatus(selectedOrder.id, 'CANCELLED');
+                      setSelectedOrder(null);
+                    }}
+                    className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl font-bold text-xs transition"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => {
-                    window.print();
-                  }}
-                  className="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
+                  onClick={() => setSelectedOrder(null)}
+                  className="w-full py-2.5 bg-slate-800 text-slate-400 hover:text-white rounded-xl font-bold text-xs transition"
                 >
-                  <Printer size={15} /> Print Packing KOT
-                </button>
-                <button
-                  onClick={() => {
-                    updateOrderStatus(selectedOrder.id, 'CANCELLED');
-                    setSelectedOrder(null);
-                  }}
-                  className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl font-bold text-xs transition"
-                >
-                  Cancel Order
+                  Close Drawer
                 </button>
               </div>
-
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="w-full py-2.5 bg-slate-800 text-slate-400 hover:text-white rounded-xl font-bold text-xs transition"
-              >
-                Close Drawer
-              </button>
-            </div>
+            )}
 
           </div>
         </div>
       )}
 
-      {/* 6. MODAL: CREATE MANUAL ORDER */}
+      {/* 6. MODAL: EDIT PRODUCT SKU */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <h3 className="font-black text-base text-white flex items-center gap-2">
+                <Edit className="text-emerald-400" size={18} /> Edit Product SKU #{editingProduct.id}
+              </h3>
+              <button onClick={() => setEditingProduct(null)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProductEdit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Product Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Category</label>
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    {categories.filter((c) => c !== 'ALL').map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Pack Size / Weight</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.weight}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, weight: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Selling Price (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">MRP (₹)</label>
+                  <input
+                    type="number"
+                    value={editingProduct.mrp}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, mrp: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Live Stock</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingProduct.stock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold text-emerald-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Min Threshold</label>
+                  <input
+                    type="number"
+                    value={editingProduct.minThreshold}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, minThreshold: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Aisle / Shelf Location</label>
+                  <input
+                    type="text"
+                    value={editingProduct.shelfLocation}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, shelfLocation: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Image URL</label>
+                  <input
+                    type="url"
+                    value={editingProduct.image}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 truncate"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-700/25 transition flex items-center justify-center gap-1.5"
+                >
+                  <Save size={16} /> Save Product Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MODAL: EDIT RIDER INFO */}
+      {editingRider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <h3 className="font-black text-base text-white flex items-center gap-2">
+                <Edit className="text-emerald-400" size={18} /> Edit Rider #{editingRider.id}
+              </h3>
+              <button onClick={() => setEditingRider(null)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRiderEdit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Rider Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editingRider.name}
+                  onChange={(e) => setEditingRider({ ...editingRider, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Mobile Phone</label>
+                <input
+                  type="tel"
+                  required
+                  pattern="[0-9]{10}"
+                  value={editingRider.phone}
+                  onChange={(e) => setEditingRider({ ...editingRider, phone: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Vehicle Details & Plate Number</label>
+                <input
+                  type="text"
+                  required
+                  value={editingRider.vehicle}
+                  onChange={(e) => setEditingRider({ ...editingRider, vehicle: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Current Status</label>
+                <select
+                  value={editingRider.status}
+                  onChange={(e) => setEditingRider({ ...editingRider, status: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="AVAILABLE">AVAILABLE (Idle / Ready)</option>
+                  <option value="DELIVERING">DELIVERING (On Route)</option>
+                  <option value="ON_BREAK">ON BREAK</option>
+                  <option value="OFFLINE">OFFLINE</option>
+                </select>
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-700/25 transition flex items-center justify-center gap-1.5"
+                >
+                  <Save size={16} /> Save Rider Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingRider(null)}
+                  className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 8. MODAL: EDIT HUB & OPERATIONS SETTINGS */}
+      {showEditHubModal && hubEditForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <h3 className="font-black text-base text-white flex items-center gap-2">
+                <Sliders className="text-emerald-400" size={18} /> Edit Hub & Operations Info
+              </h3>
+              <button onClick={() => setShowEditHubModal(false)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveHubEdit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Store / Hub Name</label>
+                <input
+                  type="text"
+                  required
+                  value={hubEditForm.storeName}
+                  onChange={(e) => setHubEditForm({ ...hubEditForm, storeName: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Hub Location</label>
+                <input
+                  type="text"
+                  required
+                  value={hubEditForm.location}
+                  onChange={(e) => setHubEditForm({ ...hubEditForm, location: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Active Packing Bays</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={hubEditForm.activePackingBays}
+                    onChange={(e) => setHubEditForm({ ...hubEditForm, activePackingBays: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Cold Room Temp</label>
+                  <input
+                    type="text"
+                    value={hubEditForm.coldRoomTemp}
+                    onChange={(e) => setHubEditForm({ ...hubEditForm, coldRoomTemp: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono text-blue-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Manager on Shift</label>
+                  <input
+                    type="text"
+                    value={hubEditForm.managerName}
+                    onChange={(e) => setHubEditForm({ ...hubEditForm, managerName: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Shift Timings</label>
+                  <input
+                    type="text"
+                    value={hubEditForm.shift}
+                    onChange={(e) => setHubEditForm({ ...hubEditForm, shift: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Store Announcement</label>
+                <input
+                  type="text"
+                  value={hubEditForm.announcement}
+                  onChange={(e) => setHubEditForm({ ...hubEditForm, announcement: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-700/25 transition flex items-center justify-center gap-1.5"
+                >
+                  <Save size={16} /> Save Hub Settings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditHubModal(false)}
+                  className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 9. MODAL: CREATE MANUAL ORDER */}
       {showNewOrderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
@@ -1681,7 +2445,7 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* 7. MODAL: ADD PRODUCT SKU */}
+      {/* 10. MODAL: ADD PRODUCT SKU */}
       {showAddProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
@@ -1792,7 +2556,7 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* 8. MODAL: ADD RIDER */}
+      {/* 11. MODAL: ADD RIDER */}
       {showAddRiderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
