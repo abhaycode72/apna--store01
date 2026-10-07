@@ -29,17 +29,25 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    // Simple admin check
-    const isAdmin = localStorage.getItem('isAdmin');
-    if (!isAdmin) {
+    // Admin authentication check
+    const hasAdminAccess =
+      localStorage.getItem('isAdmin') === 'true' ||
+      localStorage.getItem('admin-bypass') === 'true';
+
+    if (!hasAdminAccess) {
       router.push('/admin/login');
     }
   }, [router]);
 
   if (!mounted) return <div className="min-h-screen flex items-center justify-center font-bold text-gray-500">Loading Admin Panel...</div>;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('admin-bypass');
+    localStorage.removeItem('adminUser');
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (e) {}
     router.push('/admin/login');
   };
 

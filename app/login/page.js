@@ -29,6 +29,37 @@ export default function LoginPage() {
     
     try {
       if (isLogin) {
+        // Direct Super Admin Check
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanPass = password.trim();
+        const isSuperAdmin =
+          (cleanEmail === 'admin@apnastore.com' || cleanEmail === 'admin' || cleanEmail === 'mayank@apnastore.com') &&
+          (cleanPass === 'admin' || cleanPass === 'apna123' || cleanPass === 'admin123');
+
+        if (isSuperAdmin) {
+          setIsSuccess(true);
+          login({
+            name: 'Super Admin',
+            email: 'admin@apnastore.com',
+            phone: '+91 9876543210',
+            id: 'admin-super-01',
+          });
+          localStorage.setItem('isAdmin', 'true');
+          localStorage.setItem('admin-bypass', 'true');
+          try {
+            await fetch('/api/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: cleanEmail, password: cleanPass }),
+            });
+          } catch (e) {}
+
+          setTimeout(() => {
+            router.push('/admin');
+          }, 1000);
+          return;
+        }
+
         // SUPABASE LOGIN
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -52,6 +83,7 @@ export default function LoginPage() {
         setTimeout(() => {
           if (isAdmin) {
             localStorage.setItem('isAdmin', 'true');
+            localStorage.setItem('admin-bypass', 'true');
             router.push('/admin');
           } else {
             router.push('/');
